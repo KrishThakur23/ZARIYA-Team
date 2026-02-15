@@ -1,0 +1,52 @@
+{
+  "placeholderImages": [
+    {
+      "id": "1",
+      "name": "Terracotta Vase",
+      "price": "45.00",
+      "artisan": "Maria Sanchez",
+      "imageUrl": "https://picsum.photos/seed/pottery1/600/800",
+      "imageHint": "ceramic vase"
+    },
+    {
+      "id": "2",
+      "name": "Oceanic Dreams",
+      "price": "120.00",
+      "artisan": "Leo Carter",
+      "imageUrl": "https://picsum.photos/seed/painting2/600/800",
+      "imageHint": "abstract painting"
+    },
+    {
+      "id": "3",
+      "name": "Turquoise Drop Necklace",
+      "price": "85.00",
+      "artisan": "Aisha Khan",
+      "imageUrl": "https://picsum.photos/seed/jewelry3/600/800",
+      "imageHint": "silver necklace"
+    },
+    {
+      "id": "4",
+      "name": "Sunrise Wool Blanket",
+      "price": "150.00",
+      "artisan": "Kenji Tanaka",
+      "imageUrl": "https://picsum.photos/seed/weaving4/600/800",
+      "imageHint": "wool blanket"
+    },
+    {
+      "id": "5",
+      "name": "Forest Sparrow",
+      "price": "60.00",
+      "artisan": "Elena Petrova",
+      "imageUrl": "https://picsum.photos/seed/carving5/600/800",
+      "imageHint": "wooden sculpture"
+    },
+    {
+      "id": "6",
+      "name": "Amber Glass Pitcher",
+      "price": "75.00",
+      "artisan": "David Chen",
+      "imageUrl": "https://picsum.photos/seed/glass6/600/800",
+      "imageHint": "glass pitcher"
+    }
+  ]
+}
