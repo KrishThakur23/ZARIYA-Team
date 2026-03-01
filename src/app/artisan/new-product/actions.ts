@@ -1,7 +1,6 @@
 'use server';
 
-import { enhanceAndCartoonizeImage } from '@/ai/flows/enhance-and-cartoonize-image';
-import { generateProductDetails } from '@/ai/flows/generate-product-details';
+import { generateProductDetails } from '@/ai/bedrock';
 import { z } from 'zod';
 
 const EnhanceImageSchema = z.object({
@@ -18,34 +17,16 @@ export async function handleEnhanceImage(formData: FormData) {
 
   const originalImage = parsed.data.productPhotoDataUri;
 
-  try {
-    // TRY AI enhancement first
-    const result = await enhanceAndCartoonizeImage({
-      productPhotoDataUri: originalImage,
-    });
+  // AI image processing removed per AWS migration instructions.
+  // We will return the original image to fall back to the client-side canvas manipulations.
+  console.log('⚠️ AI enhancement disabled, using client-side fallback');
 
-    // Success! Return AI-enhanced images
-    console.log('✅ AI image enhancement succeeded');
-    return {
-      success: true,
-      enhancedImage: result.enhancedImage,
-      cartoonImage: result.cartoonImage
-    };
-
-  } catch (e: any) {
-    // AI failed - silently use client-side fallback
-    console.log('⚠️ AI enhancement unavailable, using client-side fallback');
-    console.error('AI error details:', e.message);
-
-    // ALWAYS return success with fallback images
-    // The client-side processing will happen in the browser
-    return {
-      success: true,
-      enhancedImage: originalImage, // Will be processed by client
-      cartoonImage: originalImage,  // Will be processed by client
-      fallback: true // Flag to trigger client-side processing
-    };
-  }
+  return {
+    success: true,
+    enhancedImage: originalImage, // Will be processed by client
+    cartoonImage: originalImage,  // Will be processed by client
+    fallback: true // Flag to trigger client-side processing
+  };
 }
 
 const GenerateDetailsSchema = z.object({

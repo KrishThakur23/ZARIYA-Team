@@ -47,49 +47,52 @@ export default function ProductPage() {
 
     useEffect(() => {
         if (params.id) {
-            // 1. Try to find in localStorage
-            try {
-                const localProducts = JSON.parse(localStorage.getItem('zariya_products') || '[]');
-                const foundLocal = localProducts.find((p: any) => p.id === params.id);
+            // 1. Try to find in DynamoDB
+            const fetchProduct = async () => {
+                try {
+                    const res = await fetch('/api/products');
+                    if (res.ok) {
+                        const remoteProducts = await res.json();
+                        const foundRemote = remoteProducts.find((p: any) => p.id === params.id);
 
-                if (foundLocal) {
-                    // Transform local product to match UI format if needed
-                    const transformed = {
-                        id: foundLocal.id,
-                        title: foundLocal.title,
-                        artisan: foundLocal.artisan || 'You',
-                        price: foundLocal.price || 0,
-                        image: foundLocal.images?.enhanced || foundLocal.images?.original || 'https://images.unsplash.com/photo-1578662996442-48f60103fc96',
-                        description: foundLocal.description || foundLocal.story,
-                        location: foundLocal.location || 'India',
-                        category: foundLocal.category,
-                        rating: 5.0,
-                        story: foundLocal.story,
-                        specifications: {
-                            material: 'Authentic Materials',
-                            dimensions: foundLocal.dimensions || 'Standard',
-                            weight: 'N/A',
-                            care: 'Handle with care'
+                        if (foundRemote) {
+                            // Transform remote product to match UI format if needed
+                            const transformed = {
+                                id: foundRemote.id,
+                                title: foundRemote.title,
+                                artisan: foundRemote.artisan || 'You',
+                                price: foundRemote.price || 0,
+                                image: foundRemote.originalImage || foundRemote.images?.enhanced || foundRemote.images?.original || 'https://images.unsplash.com/photo-1578662996442-48f60103fc96',
+                                description: foundRemote.description || foundRemote.story,
+                                location: foundRemote.location || 'India',
+                                category: foundRemote.category,
+                                rating: 5.0,
+                                story: foundRemote.story,
+                                specifications: {
+                                    material: 'Authentic Materials',
+                                    dimensions: foundRemote.dimensions || 'Standard',
+                                    weight: 'N/A',
+                                    care: 'Handle with care'
+                                }
+                            };
+                            setProduct(transformed);
+                            setLoading(false);
+                            return;
                         }
-                    };
-                    setProduct(transformed);
-                    setLoading(false);
-                    return;
+                    }
+                } catch (e) {
+                    console.error("Error fetching from API", e);
                 }
-            } catch (e) {
-                console.error("Error reading from localStorage", e);
-            }
 
-            // 2. Fallback to mock data
-            const foundMock = mockProducts.find(p => p.id === params.id);
-            if (foundMock) {
-                setProduct(foundMock);
-            } else {
-                // 3. Fallback for demo: show first mock product if ID not found (so page never breaks)
-                // Or handle 404 gracefully. For this demo, let's show a generic product logic
-                // or keep loading false and show "Product not found"
-            }
-            setLoading(false);
+                // 2. Fallback to mock data
+                const foundMock = mockProducts.find(p => p.id === params.id);
+                if (foundMock) {
+                    setProduct(foundMock);
+                }
+                setLoading(false);
+            };
+
+            fetchProduct();
         }
     }, [params.id]);
 

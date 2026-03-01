@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
+
+const region = process.env.AWS_REGION;
+const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+
+if (!accessKeyId || !secretAccessKey || !region) {
+  throw new Error("AWS environment variables not configured properly.");
+}
+
+const client = new BedrockRuntimeClient({
+  region,
+  credentials: {
+    accessKeyId,
+    secretAccessKey,
+  },
+});
+
 
 const StoryRequestSchema = z.object({
   productId: z.string(),
@@ -18,10 +35,7 @@ export async function POST(request: NextRequest) {
     const storyTranscript = transcript || "I created this beautiful handmade piece with passion and traditional techniques.";
     console.log('📝 Processing story transcript (language:', language || 'en', '):', storyTranscript.substring(0, 50) + '...');
 
-    // Generate story using AI
-    const storyGeneration = await ai.generate({
-      model: 'googleai/gemini-1.5-flash',
-      prompt: `Based on this artisan's spoken story about their craft, create a polished product description and a short marketing description.
+    const prompt = `Based on this artisan's spoken story about their craft, create a polished product description and a short marketing description.
 
 Original transcript: "${storyTranscript}"
 
@@ -29,16 +43,43 @@ Please provide:
 1. A compelling craft story (2-3 paragraphs) that captures the artisan's passion and process
 2. A short description (1-2 sentences) for marketing purposes
 
-Format as JSON with keys: craft_story, short_description`
+Format as JSON with keys: "craft_story" (string), "short_description" (string)`;
+
+    const payload = {
+      anthropic_version: 'bedrock-2023-05-31',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }],
+    };
+
+    const command = new InvokeModelCommand({
+      modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
+      contentType: 'application/json',
+      accept: 'application/json',
+      body: JSON.stringify(payload),
     });
 
-    const aiResponse = storyGeneration.output?.text;
     let parsedResponse;
-
     try {
-      parsedResponse = JSON.parse(aiResponse || '{}');
-    } catch {
-      // Fallback if JSON parsing fails
+      console.log("Calling AWS service: Bedrock (Generate Story)");
+      const response = await client.send(command);
+      console.log("AWS call success");
+
+      const resultString = new TextDecoder().decode(response.body);
+      const resultObj = JSON.parse(resultString);
+      const textCompletion = resultObj.content[0].text;
+
+      const jsonMatch = textCompletion.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        parsedResponse = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error("Failed to parse Claude output into JSON");
+      }
+    } catch (e: any) {
+      console.error("AWS error:", e);
+      if (e.name === 'AccessDeniedException') {
+        console.error("Check IAM permissions for the following actions: bedrock:InvokeModel");
+      }
+      // Fallback if JSON parsing fails or Bedrock fails
       parsedResponse = {
         craft_story: "This beautiful handmade piece was crafted with passion and attention to detail. Each item tells a unique story of traditional craftsmanship and artistic vision.",
         short_description: "A beautifully crafted handmade piece that combines traditional techniques with modern appeal."

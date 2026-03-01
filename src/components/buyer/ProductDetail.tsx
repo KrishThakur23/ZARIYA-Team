@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Heart, Share2, Star, CheckCircle, Truck, MapPin, Clock, ShoppingCart, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, Heart, Share2, Star, CheckCircle, Truck, MapPin, Clock, ShoppingCart, Plus, Minus, Volume2, Square } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 
@@ -42,6 +42,8 @@ export default function ProductDetail({ product, onBack, onAddToCart, onAddToWis
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'details' | 'story' | 'shipping'>('details');
+  const [isPlayingStory, setIsPlayingStory] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
   // Check wishlist status on mount
@@ -97,6 +99,41 @@ export default function ProductDetail({ product, onBack, onAddToCart, onAddToWis
       localStorage.setItem('zariya_wishlist', JSON.stringify(newWishlist));
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const playStoryAudio = async (text: string) => {
+    if (isPlayingStory && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlayingStory(false);
+      return;
+    }
+
+    try {
+      setIsPlayingStory(true);
+      toast({ title: 'Generating audio...', description: 'Loading artisan story' });
+
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+
+      if (!res.ok) throw new Error('Failed to fetch audio');
+
+      const { audio } = await res.json();
+
+      if (!audioRef.current) {
+        audioRef.current = new Audio();
+        audioRef.current.onended = () => setIsPlayingStory(false);
+      }
+
+      audioRef.current.src = audio;
+      await audioRef.current.play();
+    } catch (e) {
+      console.error('Audio playback failed', e);
+      setIsPlayingStory(false);
+      toast({ variant: 'destructive', title: 'Audio playback failed' });
     }
   };
 
@@ -344,10 +381,20 @@ export default function ProductDetail({ product, onBack, onAddToCart, onAddToWis
                           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-lg">
                             {enhancedProduct.artisan.charAt(0)}
                           </div>
-                          <div>
+                          <div className="flex-1">
                             <p className="font-medium text-gray-900">The Artisan's Story</p>
                             <p className="text-sm text-gray-600">by {enhancedProduct.artisan}</p>
                           </div>
+                          <button
+                            onClick={() => playStoryAudio(enhancedProduct.story)}
+                            className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center hover:bg-amber-200 transition-colors"
+                          >
+                            {isPlayingStory ? (
+                              <Square className="w-5 h-5 text-amber-700 fill-amber-700" />
+                            ) : (
+                              <Volume2 className="w-5 h-5 text-amber-700" />
+                            )}
+                          </button>
                         </div>
                         <p className="text-gray-700 leading-relaxed italic">
                           "{enhancedProduct.story}"
@@ -530,10 +577,20 @@ export default function ProductDetail({ product, onBack, onAddToCart, onAddToWis
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-sm">
                           {enhancedProduct.artisan.charAt(0)}
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <p className="text-sm font-medium text-gray-900">by {enhancedProduct.artisan}</p>
                           <p className="text-xs text-gray-600">{enhancedProduct.location}</p>
                         </div>
+                        <button
+                          onClick={() => playStoryAudio(enhancedProduct.story)}
+                          className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center hover:bg-amber-200 transition-colors"
+                        >
+                          {isPlayingStory ? (
+                            <Square className="w-4 h-4 text-amber-700 fill-amber-700" />
+                          ) : (
+                            <Volume2 className="w-4 h-4 text-amber-700" />
+                          )}
+                        </button>
                       </div>
                       <p className="text-gray-700 text-sm leading-relaxed italic">
                         "{enhancedProduct.story}"

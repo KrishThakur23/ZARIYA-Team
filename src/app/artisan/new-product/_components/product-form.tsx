@@ -49,28 +49,13 @@ const productSchema = z.object({
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
-const PHOTO_INSTRUCTIONS = [
-  "Let's start with a great photo. Position your item in the center.",
-  "Great. Now, let's get the lighting right. Avoid harsh shadows.",
-  "Perfect. Hold it steady...",
-  "A little closer, please. Fill the frame.",
-  "That's it! Tap the capture button when you're ready.",
-];
-
-const ASSISTANT_MESSAGES: Record<string, string | string[]> = {
-  photos: PHOTO_INSTRUCTIONS,
-  details: 'Looking great! Now, tell me a bit about your piece. What is its title and category?',
-  story: 'Perfect! Now let\'s capture the story behind your creation. Click the microphone to record your story, or you can type it manually. Tell me what inspired you, how you made it, and what makes it special.',
-  pricing: 'We are almost done. What is the price you want to set? I can also suggest a price based on the details.',
-  shipping: 'Great! Now let\'s set up your shipping address for customer deliveries.',
-  billing: 'Perfect! Now let\'s set up your payment information to start selling.',
-  review: 'Everything looks perfect! Just give it one last look before we put it up for sale.',
-};
+import { assistantTranslations } from '@/lib/i18n';
 
 export default function ProductForm() {
   const router = useRouter();
-  const { setAssistantMessage } = useAssistantContext();
-  const [step, setStep] = useState('photos');
+  const { setAssistantMessage, activeLanguage, setActiveLanguage } = useAssistantContext();
+  const t = assistantTranslations[activeLanguage || 'en'] || assistantTranslations.en;
+  const [step, setStep] = useState('language');
   const [images, setImages] = useState({
     original: null as string | null,
     enhanced: null as string | null,
@@ -81,12 +66,13 @@ export default function ProductForm() {
   // ... (existing code) ...
 
   const prevStep = () => {
-    if (step === 'photos') {
+    if (step === 'language') {
       router.back();
       return;
     }
 
-    if (step === 'review') setStep('billing');
+    if (step === 'photos') setStep('language');
+    else if (step === 'review') setStep('billing');
     else if (step === 'billing') setStep('shipping');
     else if (step === 'shipping') setStep('pricing');
     else if (step === 'pricing') setStep('story');
@@ -122,42 +108,30 @@ export default function ProductForm() {
 
   useEffect(() => {
     const giveInstruction = () => {
-      const messages = ASSISTANT_MESSAGES[step];
-      console.log('Product Form - Setting message for step:', step, 'messages:', messages);
-      if (Array.isArray(messages)) {
-        setAssistantMessage(messages[instructionIndex.current]);
-        instructionIndex.current = (instructionIndex.current + 1) % messages.length;
-      } else if (typeof messages === 'string') {
-        setAssistantMessage(messages);
+      const getMessage = () => {
+        if (step === 'photos') {
+          return t.photo1 as string;
+        }
+        return (assistantTranslations[activeLanguage || 'en'] || assistantTranslations.en)[step] as string;
+      };
+
+      const message = getMessage();
+      console.log('Product Form - Setting message for step:', step, 'message:', message);
+      if (typeof message === 'string' && message) {
+        setAssistantMessage(message);
       }
     };
 
-    // Stop previous interval if it exists
-    if (instructionInterval.current) {
-      clearInterval(instructionInterval.current);
-      instructionInterval.current = null;
-    }
-    instructionIndex.current = 0;
-
-    // Logic to give instructions
-    if (step === 'photos' && !images.original) {
-      giveInstruction(); // Give first instruction immediately
-      instructionInterval.current = setInterval(giveInstruction, 5000);
-    } else {
+    if (step !== 'language') {
       giveInstruction();
     }
-
-    return () => {
-      if (instructionInterval.current) {
-        clearInterval(instructionInterval.current);
-      }
-    };
-  }, [step, images.original]); // Removed setAssistantMessage from dependencies to prevent infinite loop
+  }, [step, images.original]);
 
 
   const processAndEnhanceImage = (dataUrl: string) => {
     setImages({ original: dataUrl, enhanced: null, cartoon: null });
-    setAssistantMessage('Enhancing your photo with a touch of AI magic...');
+    /* auto-removed redeclaration */
+    setAssistantMessage(t.processingPhoto as string);
 
     startAiTransition(async () => {
       const formData = new FormData();
@@ -169,7 +143,8 @@ export default function ProductForm() {
         if (result.fallback) {
           // Use client-side enhancement (AI unavailable)
           try {
-            setAssistantMessage('Processing your photo...');
+            /* auto-removed redeclaration */
+            setAssistantMessage(t.processingMagic as string);
             const enhancedImage = await enhanceImageWithCanvas(dataUrl);
             const cartoonImage = await createCartoonEffect(dataUrl);
 
@@ -178,7 +153,8 @@ export default function ProductForm() {
               title: 'Image Enhanced!',
               description: 'Your images are ready.'
             });
-            setAssistantMessage('Your photo looks fantastic! Click Next when you\'re ready to continue.');
+            /* auto-removed redeclaration */
+            setAssistantMessage(t.photoGreatNext as string);
           } catch (enhanceError) {
             // Even if client processing fails, show original
             console.error('Browser enhancement failed:', enhanceError);
@@ -187,7 +163,8 @@ export default function ProductForm() {
               title: 'Image Ready!',
               description: 'Your photo is ready.'
             });
-            setAssistantMessage('Your photo looks great! Click Next when you\'re ready to continue.');
+            /* auto-removed redeclaration */
+            setAssistantMessage(t.photoGreatNextFallback as string);
           }
         } else {
           // Use AI-enhanced images
@@ -196,7 +173,8 @@ export default function ProductForm() {
             title: 'AI Enhanced!',
             description: 'Your images have been enhanced by AI.'
           });
-          setAssistantMessage('Your photo looks fantastic! Click Next when you\'re ready to continue.');
+          /* auto-removed redeclaration */
+          setAssistantMessage(t.photoGreatNext as string);
         }
       } else {
         // Fallback to original images (should rarely happen)
@@ -205,7 +183,8 @@ export default function ProductForm() {
           title: 'Image Ready!',
           description: 'Your photo is ready.'
         });
-        setAssistantMessage('Your photo looks great! Click Next when you\'re ready to continue.');
+        /* auto-removed redeclaration */
+        setAssistantMessage(t.photoGreatNextFallback as string);
       }
     });
   };
@@ -235,7 +214,8 @@ export default function ProductForm() {
       return;
     }
 
-    setAssistantMessage('Loading your photo...');
+    /* auto-removed redeclaration */
+    setAssistantMessage(t.loadingPhoto as string);
 
     const reader = new FileReader();
 
@@ -246,7 +226,8 @@ export default function ProductForm() {
         title: 'Upload Failed',
         description: 'Could not read the file. Please try again.'
       });
-      setAssistantMessage('There was an issue reading your photo. Please try again.');
+      /* auto-removed redeclaration */
+      setAssistantMessage(t.readError as string);
     };
 
     reader.onload = (event) => {
@@ -259,7 +240,8 @@ export default function ProductForm() {
           title: 'Upload Failed',
           description: 'Could not process the image. Please try again.'
         });
-        setAssistantMessage('There was an issue processing your photo. Please try again.');
+        /* auto-removed redeclaration */
+        setAssistantMessage(t.processError as string);
       }
     };
 
@@ -267,7 +249,8 @@ export default function ProductForm() {
   };
 
   const onGenerateDetails = () => {
-    setAssistantMessage('Crafting a story and suggesting a price for you...');
+    /* auto-removed redeclaration */
+    setAssistantMessage(t.generatingPricing as string);
     startAiTransition(async () => {
       const formData = new FormData();
       const fields: (keyof ProductFormValues)[] = ['title', 'category', 'dimensions', 'price', 'story'];
@@ -279,15 +262,16 @@ export default function ProductForm() {
       });
 
       const result = await handleGenerateDetails(formData);
+      /* auto-removed redeclaration */
       if ('error' in result && result.error) {
         toast({ variant: 'destructive', title: 'Generation Failed', description: 'Please check your inputs.' });
-        setAssistantMessage("I couldn't generate details. Please fill out the title and category first.");
+        setAssistantMessage(t.generateError as string);
       } else if ('success' in result && result.success) {
         form.setValue('description', result.description, { shouldValidate: true });
         form.setValue('story', result.craftStory || result.description, { shouldValidate: true });
         form.setValue('price', result.suggestedPrice, { shouldValidate: true });
         toast({ title: 'Success!', description: 'AI has generated product details for you.' });
-        setAssistantMessage('I’ve generated a story and a suggested price. Feel free to adjust them!');
+        setAssistantMessage(t.generateSuccess as string);
       }
     });
   };
@@ -301,89 +285,97 @@ export default function ProductForm() {
     setStoryData(data);
     form.setValue('story', data.craft_story, { shouldValidate: true });
     form.setValue('description', data.short_description, { shouldValidate: true });
-    setAssistantMessage('Wonderful! I\'ve captured your story. You can edit it below if needed, then we\'ll move on to pricing.');
+    /* auto-removed redeclaration */
+    setAssistantMessage(t.storyCaptured as string);
   };
 
-  const onSubmit = (data: ProductFormValues) => {
-    const product = {
-      artisanId: 'user-id-placeholder',
-      ...data,
-      images: {
-        original: images.original,
-        enhanced: images.enhanced,
-        cartoon: images.cartoon,
-      },
-      status: 'published',
-      createdAt: new Date().toISOString(),
-      id: `product-${Date.now()}`,
-      artisan: 'You',
-      location: 'India',
-      rating: 5.0,
-    };
-
-    console.log('Submitting to Firestore (placeholder):', product);
-
-    // Save to localStorage for demo mode
+  const onSubmit = async (data: ProductFormValues) => {
+    /* auto-removed redeclaration */
+    setAssistantMessage(t.savingProduct as string);
     try {
-      const existingProducts = JSON.parse(localStorage.getItem('zariya_products') || '[]');
-      const updatedProducts = [product, ...existingProducts];
-      localStorage.setItem('zariya_products', JSON.stringify(updatedProducts));
-      console.log('✅ Saved to localStorage! Total products:', updatedProducts.length);
+      let imageKey = '';
+      let imageUrl = images.original || '';
+
+      if (images.original && images.original.startsWith('data:image')) {
+        // 1. Get presigned URL
+        const presignRes = await fetch('/api/s3/presign', {
+          method: 'POST',
+          body: JSON.stringify({ filename: 'product-photo.jpg' })
+        });
+        const presignData = await presignRes.json();
+
+        if (presignData.uploadUrl) {
+          // 2. Convert DataURI to Blob
+          const res = await fetch(images.original);
+          const blob = await res.blob();
+
+          // 3. Upload to S3
+          await fetch(presignData.uploadUrl, {
+            method: 'PUT',
+            body: blob,
+            headers: { 'Content-Type': 'image/jpeg' }
+          });
+
+          imageKey = presignData.objectKey;
+          imageUrl = presignData.uploadUrl.split('?')[0]; // Extract base URL
+        }
+      }
+
+      const product = {
+        artisanId: 'user-id-placeholder',
+        ...data,
+        images: {
+          original: imageUrl,
+          enhanced: images.enhanced, // Note: keeping as dataURI for demo
+          cartoon: images.cartoon,   // Note: keeping as dataURI for demo
+        },
+        imageKey,
+        originalImage: imageUrl,
+        status: 'published',
+        createdAt: new Date().toISOString(),
+        id: `product-${Date.now()}`,
+        artisan: 'You',
+        location: 'India',
+        rating: 5.0,
+      };
+
+      console.log('Submitting to AWS API:', product);
+
+      const saveRes = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(product),
+      });
+
+      if (!saveRes.ok) throw new Error('Failed to save to DynamoDB');
+
+      setAssistantMessage(t.listingSuccess as string);
+      toast({ title: 'Product Listed!', description: 'Your creation is now live on the marketplace.' });
+
+      setTimeout(() => {
+        router.push('/buyer');
+      }, 1500);
+
     } catch (error) {
-      console.error('Failed to save to localStorage:', error);
+      console.error('Failed to submit:', error);
+      toast({ variant: 'destructive', title: 'Submit Failed', description: 'Could not save product.' });
+      setAssistantMessage(t.listingError as string);
     }
-
-    setAssistantMessage('Congratulations! Your product is now listed.');
-    toast({ title: 'Product Listed!', description: 'Your creation is now live on the marketplace.' });
-
-    // Redirect to buyer page after a short delay
-    setTimeout(() => {
-      router.push('/buyer');
-    }, 1500);
   };
 
 
   const nextStep = async () => {
-    if (step === 'photos' && images.original) setStep('details');
+    if (step === 'language') setStep('photos');
+    else if (step === 'photos' && images.original) setStep('details');
     else if (step === 'details') setStep('story');
     else if (step === 'story') {
       const currentStory = form.getValues('story');
       if (currentStory && currentStory.trim().length > 10) {
-        // Silent AI Enhancement
-        setAssistantMessage('Polishing your story...');
-        startAiTransition(async () => {
-          try {
-            // We reuse the update-story API or similar logic
-            // Since there isn't a dedicated "enhance story" API shown in actions.ts (only generateDetails and enhanceImage),
-            // we will assume we just move forward with the text. 
-            // BUT the user asked for "Try to enhance with AI".
-            // Let's use the same /api/voice/story endpoint if it supports text-only or just move on for now if no endpoint exists for text-to-text enhancement.
-            // Actually, voice-story-recorder used /api/voice/story which took a transcript.
-            // We can call that here!
-
-            const response = await fetch('/api/voice/story', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                productId: 'demo',
-                transcript: currentStory,
-                language: 'en' // Defaulting to en for simple text enhancement
-              })
-            });
-            const result = await response.json();
-
-            if (result.success && result.craft_story) {
-              form.setValue('story', result.craft_story);
-              toast({ title: 'Story Polished', description: 'AI enhanced your story.' });
-            }
-          } catch (e) {
-            // Silent failure - just proceed
-            console.error('Silent AI enhancement failed', e);
-          } finally {
-            setStep('pricing');
-            setAssistantMessage('Let\'s set a price for your masterpiece.');
-          }
-        });
+        setStep('pricing');
+        /* auto-removed redeclaration */
+        setAssistantMessage(t.setPrice as string);
       } else {
         setStep('pricing');
       }
@@ -395,6 +387,46 @@ export default function ProductForm() {
 
   const renderStep = () => {
     switch (step) {
+      case 'language':
+        const languages = [
+          { code: 'en', label: 'English', native: 'English', flag: '🇺🇸' },
+          { code: 'hi', label: 'Hindi', native: 'हिंदी', flag: '🇮🇳' },
+          { code: 'mr', label: 'Marathi', native: 'मराठी', flag: '🇮🇳' },
+          { code: 'ta', label: 'Tamil', native: 'தமிழ்', flag: '🇮🇳' },
+          { code: 'te', label: 'Telugu', native: 'తెలుగు', flag: '🇮🇳' },
+          { code: 'bn', label: 'Bengali', native: 'বাংলা', flag: '🇮🇳' },
+          { code: 'pa', label: 'Punjabi', native: 'ਪੰਜਾਬੀ', flag: '🇮🇳' }
+        ];
+        return (
+          <div className="w-full max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <h1 className="text-4xl font-serif font-bold mb-4 bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                Choose Your Language
+              </h1>
+              <p className="text-xl text-gray-700 max-w-2xl mx-auto">
+                Select your preferred language to begin adding your masterpiece to Zariya.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4">
+              {languages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => {
+                    setActiveLanguage(lang.code);
+                    setStep('photos');
+                  }}
+                  className="group relative flex flex-col items-center justify-center p-8 bg-white rounded-3xl border-2 border-orange-100 hover:border-orange-500 hover:shadow-2xl hover:shadow-orange-200/50 transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-orange-50/50 to-red-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <span className="text-4xl mb-4 relative z-10">{lang.flag}</span>
+                  <span className="text-2xl font-bold text-gray-800 mb-1 relative z-10">{lang.native}</span>
+                  <span className="text-sm font-medium text-gray-500 relative z-10">{lang.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
       case 'photos':
         return (
           <div className="w-full max-w-4xl mx-auto">
@@ -657,11 +689,32 @@ export default function ProductForm() {
                     <p className="text-sm text-gray-500">Tap the microphone to speak, or type directly below.</p>
                   </div>
 
+                  <div className="w-full max-w-xs mx-auto mb-4">
+                    <Select value={activeLanguage} onValueChange={setActiveLanguage}>
+                      <SelectTrigger className="border-2 border-amber-200 focus:border-amber-400 bg-white">
+                        <SelectValue placeholder="Select Language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en">English (US)</SelectItem>
+                        <SelectItem value="hi">Hindi (हिंदी)</SelectItem>
+                        <SelectItem value="mr">Marathi (मराठी)</SelectItem>
+                        <SelectItem value="ta">Tamil (தமிழ்)</SelectItem>
+                        <SelectItem value="te">Telugu (తెలుగు)</SelectItem>
+                        <SelectItem value="bn">Bengali (বাংলা)</SelectItem>
+                        <SelectItem value="pa">Punjabi (ਪੰਜਾਬੀ)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <VoiceStoryRecorder
                     onTranscriptUpdate={(text) => {
                       const currentStory = form.getValues('story') || '';
                       const separator = currentStory && !currentStory.endsWith(' ') ? ' ' : '';
                       form.setValue('story', currentStory + separator + text, { shouldValidate: true });
+                    }}
+                    onAiResponse={(text) => {
+                      setAssistantMessage(text);
+                      form.setValue('story', text, { shouldValidate: true });
                     }}
                     isProcessing={isAiLoading}
                   />
@@ -682,6 +735,48 @@ export default function ProductForm() {
                       </FormItem>
                     )}
                   />
+
+                  <div className="pt-4 flex w-full justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        const currentStory = form.getValues('story');
+                        if (!currentStory) return;
+
+                        /* auto-removed redeclaration */
+                        setAssistantMessage(t.refiningStory as string);
+                        startAiTransition(async () => {
+                          try {
+                            const response = await fetch('/api/chat', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                language: activeLanguage,
+                                generationMode: true,
+                                messages: [{ role: 'user', content: currentStory }]
+                              })
+                            });
+
+                            const data = await response.json();
+                            if (data.reply) {
+                              form.setValue('story', data.reply, { shouldValidate: true });
+                              setAssistantMessage(t.storyEnhanced as string);
+                              toast({ title: 'Story Enhanced', description: 'AI polished your product story.' });
+                            }
+                          } catch (error) {
+                            console.error('Enhancement generation failed:', error);
+                            toast({ variant: 'destructive', title: 'Generation Failed', description: 'Could not enhance story at this time.' });
+                          }
+                        });
+                      }}
+                      disabled={isAiLoading}
+                      className="w-full md:w-auto px-8 py-3 text-lg border-2 border-amber-300 hover:border-amber-400 hover:bg-amber-50 rounded-xl"
+                    >
+                      <Sparkles className="mr-3 h-5 w-5" />
+                      {isAiLoading ? 'Enhancing...' : 'Enhance with AI'}
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

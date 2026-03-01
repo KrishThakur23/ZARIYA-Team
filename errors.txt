@@ -1,0 +1,7 @@
+next.config.ts(34,5): error TS2353: Object literal may only specify known properties, and 'allowedDevOrigins' does not exist in type '{ appIsrStatus?: boolean | undefined; buildActivity?: boolean | undefined; buildActivityPosition?: "top-left" | "top-right" | "bottom-left" | "bottom-right" | undefined; position?: "top-left" | ... 3 more ... | undefined; }'.
+src/app/artisan/new-product/_components/camera-capture.tsx(123,11): error TS2322: Type '{ ref: RefObject<HTMLVideoElement>; className: string; autoPlay: true; muted: true; playsInline: true; volume: number; onLoadedMetadata: () => void; onError: (e: SyntheticEvent<...>) => void; }' is not assignable to type 'DetailedHTMLProps<VideoHTMLAttributes<HTMLVideoElement>, HTMLVideoElement>'.
+  Property 'volume' does not exist on type 'DetailedHTMLProps<VideoHTMLAttributes<HTMLVideoElement>, HTMLVideoElement>'.
+src/components/product/HeroImage.tsx(88,15): error TS2322: Type 'string | undefined' is not assignable to type 'string | StaticImport'.
+  Type 'undefined' is not assignable to type 'string | StaticImport'.
+src/lib/placeholder-images.ts(10,14): error TS2322: Type '{ id: string; name: string; price: string; artisan: string; imageUrl: string; imageHint: string; }[]' is not assignable to type 'ImagePlaceholder[]'.
+  Property 'description' is missing in type '{ id: string; name: string; price: string; artisan: string; imageUrl: string; imageHint: string; }' but required in type 'ImagePlaceholder'.

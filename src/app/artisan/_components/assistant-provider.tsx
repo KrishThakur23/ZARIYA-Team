@@ -10,25 +10,27 @@ type AssistantMessage = {
 type AssistantContextType = {
   assistantMessage: AssistantMessage;
   setAssistantMessage: (message: string) => void;
+  activeLanguage: string | null;
+  setActiveLanguage: (lang: string | null) => void;
 };
 
 const AssistantContext = createContext<AssistantContextType | undefined>(
   undefined
 );
 
-export function AssistantProvider({ 
+export function AssistantProvider({
   children,
-  initialMessage = "Welcome, Artisan! Let's get started." 
-}: { 
+}: {
   children: ReactNode,
-  initialMessage?: string,
 }) {
   const [assistantMessage, setAssistantMessageState] = useState<AssistantMessage>(
     {
-      message: initialMessage,
+      message: '',
       timestamp: Date.now(),
     }
   );
+
+  const [activeLanguage, setActiveLanguage] = useState<string | null>(null);
 
   const setAssistantMessage = useCallback((message: string) => {
     setAssistantMessageState({ message, timestamp: Date.now() });
@@ -36,7 +38,7 @@ export function AssistantProvider({
 
   return (
     <AssistantContext.Provider
-      value={{ assistantMessage, setAssistantMessage }}
+      value={{ assistantMessage, setAssistantMessage, activeLanguage, setActiveLanguage }}
     >
       {children}
     </AssistantContext.Provider>

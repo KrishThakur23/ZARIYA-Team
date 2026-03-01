@@ -25,130 +25,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Sample data - in real app this would come from props/API
-const trendingProducts = [
-  {
-    id: 'trending-1',
-    title: 'Ornate Porcelain Teapot - Floral Gold',
-    artisan: 'Priya Sharma',
-    price: 89.00,
-    image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=500&fit=crop&crop=center',
-    badge: 'Trending',
-    rating: 4.9,
-    location: 'Jaipur, India',
-    artisanAvatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
-    craftType: 'Ceramic Art',
-    description: 'Hand-painted porcelain with intricate gold floral motifs'
-  },
-  {
-    id: 'trending-2',
-    title: 'Hand-Carved Rosewood Buddha Statue',
-    artisan: 'Rajesh Kumar',
-    price: 156.00,
-    image: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=500&fit=crop&crop=center',
-    badge: 'New',
-    rating: 4.8,
-    location: 'Varanasi, India',
-    artisanAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-    craftType: 'Wood Carving',
-    description: 'Sacred rosewood carving with traditional craftsmanship'
-  },
-  {
-    id: 'trending-3',
-    title: 'Banarasi Silk Saree - Royal Blue',
-    artisan: 'Meera Patel',
-    price: 234.00,
-    image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=500&fit=crop&crop=center',
-    badge: 'Featured',
-    rating: 4.9,
-    location: 'Varanasi, India',
-    artisanAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
-    craftType: 'Silk Weaving',
-    description: 'Luxurious handwoven silk with traditional patterns'
-  }
-];
-
-const curatedFeed = [
-  {
-    id: 'feed-1',
-    title: 'Handwoven Kanjeevaram Silk Saree',
-    artisan: 'Sunita Singh',
-    price: 189.00,
-    image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop&crop=center',
-    category: 'Silk Weaving',
-    artisanAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face',
-    timeAgo: '2 hours ago',
-    location: 'Kanchipuram, India'
-  },
-  {
-    id: 'feed-2',
-    title: 'Teak Wood Hand-Carved Jewelry Box',
-    artisan: 'Lakshmi Reddy',
-    price: 67.00,
-    image: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=300&h=300&fit=crop&crop=center',
-    category: 'Wood Carving',
-    artisanAvatar: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop&crop=face',
-    timeAgo: '4 hours ago',
-    location: 'Kerala, India'
-  },
-  {
-    id: 'feed-3',
-    title: 'Brass Hand-Hammered Water Pot',
-    artisan: 'Arun Gupta',
-    price: 78.00,
-    image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop&crop=center',
-    category: 'Metalwork',
-    artisanAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-    timeAgo: '6 hours ago',
-    location: 'Moradabad, India'
-  },
-  {
-    id: 'feed-4',
-    title: 'Hand-Embroidered Cushion Covers',
-    artisan: 'Sita Devi',
-    price: 34.00,
-    image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop&crop=center',
-    category: 'Embroidery',
-    artisanAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face',
-    timeAgo: '8 hours ago',
-    location: 'Lucknow, India'
-  }
-];
-
-const famousArtisans = [
-  {
-    id: 'artisan-1',
-    name: 'Priya Sharma',
-    specialty: 'Porcelain Art',
-    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
-    followers: '12.5k',
-    verified: true
-  },
-  {
-    id: 'artisan-2',
-    name: 'Rajesh Kumar',
-    specialty: 'Wood Carving',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-    followers: '8.9k',
-    verified: true
-  },
-  {
-    id: 'artisan-3',
-    name: 'Meera Patel',
-    specialty: 'Silk Weaving',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
-    followers: '15.2k',
-    verified: true
-  },
-  {
-    id: 'artisan-4',
-    name: 'Sunita Singh',
-    specialty: 'Embroidery',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face',
-    followers: '6.7k',
-    verified: false
-  }
-];
+// Removed hardcoded mock data to enforce strict AWS environment rendering
 
 interface HomeFeedProps {
   onProductClick?: (productId: string) => void;
@@ -159,8 +36,8 @@ interface HomeFeedProps {
 export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'Pashin' }: HomeFeedProps) {
   const [currentTrendingIndex, setCurrentTrendingIndex] = useState(0);
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
-  const [mergedTrendingProducts, setMergedTrendingProducts] = useState(trendingProducts);
-  const [mergedCuratedFeed, setMergedCuratedFeed] = useState(curatedFeed);
+  const [mergedTrendingProducts, setMergedTrendingProducts] = useState<any[]>([]);
+  const [mergedCuratedFeed, setMergedCuratedFeed] = useState<any[]>([]);
   const trendingRef = useRef<HTMLDivElement>(null);
 
   // Helper function to get time ago string - HOISTED
@@ -172,56 +49,68 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
     return `${Math.floor(seconds / 86400)} days ago`;
   };
 
-  // Load products and wishlist from localStorage on mount
+  // Load products and wishlist on mount
   useEffect(() => {
-    try {
-      // Load Wishlist
-      const wishlist = JSON.parse(localStorage.getItem('zariya_wishlist') || '[]');
-      const wishlistIds = new Set(wishlist.map((p: any) => p.id)) as Set<string>;
-      setLikedProducts(wishlistIds);
+    const fetchRemoteProducts = async () => {
+      try {
+        // Load Wishlist
+        const wishlist = JSON.parse(localStorage.getItem('zariya_wishlist') || '[]');
+        const wishlistIds = new Set(wishlist.map((p: any) => p.id)) as Set<string>;
+        setLikedProducts(wishlistIds);
 
-      // Load Products
-      const localProducts = JSON.parse(localStorage.getItem('zariya_products') || '[]');
+        // Fetch Products from AWS
+        const res = await fetch('/api/products');
+        if (res.ok) {
+          const remoteProducts = await res.json();
+          if (remoteProducts.length > 0) {
+            console.log('📦 Loaded from API:', remoteProducts.length, 'products');
 
-      if (localProducts.length > 0) {
-        // ... (existing product loading logic) ...
-        // Note: I will keep the existing product loading logic here, just injecting the wishlist part
-        console.log('📦 Loaded from localStorage:', localProducts.length, 'products');
+            // Filter strictly for published products with valid image URLs
+            const validProducts = remoteProducts.filter((p: any) =>
+              p.status === 'published' && p.originalImage && typeof p.originalImage === 'string' && p.originalImage.trim() !== ''
+            );
 
-        // Transform localStorage products to match UI format
-        const transformedProducts = localProducts.map((p: any) => {
-          const isNew = (new Date().getTime() - new Date(p.createdAt).getTime()) < 5 * 60 * 1000; // 5 minutes
+            console.log('📦 Rendered valid API products:', validProducts.length);
 
-          return {
-            id: p.id,
-            title: p.title,
-            artisan: p.artisan || 'You',
-            price: p.price || 0,
-            image: p.images?.enhanced || p.images?.original || p.image || 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=500&fit=crop',
-            badge: isNew ? 'Just Listed' : 'New',
-            rating: p.rating || 5.0,
-            location: p.location || 'India',
-            artisanAvatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop',
-            craftType: p.category || 'Handmade',
-            description: p.description || p.story || 'Beautiful handcrafted item',
-            category: p.category || 'Handmade',
-            timeAgo: getTimeAgo(p.createdAt),
-            createdAt: p.createdAt
-          };
-        });
+            // Transform remote products to match UI format
+            const transformedProducts = validProducts.map((p: any) => {
+              const pDate = p.createdAt ? new Date(p.createdAt).getTime() : new Date().getTime();
+              const isNew = (new Date().getTime() - pDate) < 5 * 60 * 1000;
 
-        // Sort by newest first
-        transformedProducts.sort((a: any, b: any) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+              return {
+                id: p.id,
+                title: p.title,
+                artisan: p.artisan || 'You',
+                price: p.price || 0,
+                image: p.originalImage,
+                badge: isNew ? 'Just Listed' : 'New',
+                rating: p.rating || 5.0,
+                location: p.location || 'India',
+                artisanAvatar: p.artisanAvatar || '',
+                craftType: p.category || 'Handmade',
+                description: p.description || p.story || 'Beautiful handcrafted item',
+                category: p.category || 'Handmade',
+                timeAgo: p.createdAt ? getTimeAgo(p.createdAt) : 'Recently',
+                createdAt: p.createdAt
+              };
+            });
 
-        // Merge with mock data (localStorage products first)
-        setMergedTrendingProducts([...transformedProducts.slice(0, 3), ...trendingProducts]);
-        setMergedCuratedFeed([...transformedProducts, ...curatedFeed]);
+            // Sort by newest first
+            transformedProducts.sort((a: any, b: any) =>
+              new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+            );
+
+            // Directly inject AWS API data
+            setMergedTrendingProducts(transformedProducts);
+            setMergedCuratedFeed(transformedProducts);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load products:', error);
       }
-    } catch (error) {
-      console.error('Failed to load from localStorage:', error);
-    }
+    };
+
+    fetchRemoteProducts();
   }, []);
 
   // ... existing getTimeAgo ...
@@ -272,11 +161,11 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
   };
 
   const nextTrending = () => {
-    setCurrentTrendingIndex((prev) => (prev + 1) % trendingProducts.length);
+    setCurrentTrendingIndex((prev) => (prev + 1) % mergedTrendingProducts.length);
   };
 
   const prevTrending = () => {
-    setCurrentTrendingIndex((prev) => (prev - 1 + trendingProducts.length) % trendingProducts.length);
+    setCurrentTrendingIndex((prev) => (prev - 1 + mergedTrendingProducts.length) % mergedTrendingProducts.length);
   };
 
   const getGreeting = () => {
@@ -372,12 +261,15 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
                   <Card className="overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500 group cursor-pointer bg-white/95 backdrop-blur-sm">
                     <CardHeader className="p-0 relative">
                       <div className="aspect-[4/5] relative overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50">
-                        <Image
-                          src={product.image}
-                          alt={product.title}
-                          fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                        />
+                        {product.image && (
+                          <Image
+                            src={product.image}
+                            alt={product.title}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                            className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                          />
+                        )}
 
                         {/* Sophisticated overlay gradient */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -419,14 +311,18 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
                       {/* Artisan info with enhanced styling */}
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-amber-200 shadow-md">
-                            <Image
-                              src={product.artisanAvatar}
-                              alt={product.artisan}
-                              width={32}
-                              height={32}
-                              className="object-cover"
-                            />
+                          <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-amber-200 shadow-md flex items-center justify-center bg-amber-100 text-amber-700 font-bold">
+                            {product.artisanAvatar ? (
+                              <Image
+                                src={product.artisanAvatar}
+                                alt={product.artisan}
+                                width={32}
+                                height={32}
+                                className="object-cover"
+                              />
+                            ) : (
+                              product.artisan.charAt(0).toUpperCase()
+                            )}
                           </div>
                           <div>
                             <span className="text-sm font-semibold text-gray-800">{product.artisan}</span>
@@ -495,62 +391,7 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
         </div>
       </section>
 
-      {/* Famous Artisans Strip */}
-      <section>
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-gradient-to-r from-purple-100 to-pink-100">
-              <Award className="h-5 w-5 text-purple-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-serif font-bold text-gray-900">Featured Artisans</h2>
-              <p className="text-sm text-gray-600">Meet our talented craft masters</p>
-            </div>
-          </div>
-          <Button variant="outline" size="sm" className="border-2 border-purple-200 hover:border-purple-400 text-purple-700 hover:text-purple-800 font-medium">
-            Follow All
-          </Button>
-        </div>
 
-        <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
-          {famousArtisans.map((artisan) => (
-            <motion.div
-              key={artisan.id}
-              className="flex-shrink-0"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Card
-                className="w-36 p-5 text-center border-0 shadow-lg hover:shadow-xl transition-all duration-500 cursor-pointer bg-gradient-to-br from-white to-amber-50/30 backdrop-blur-sm group"
-                onClick={() => onArtisanClick?.(artisan.id)}
-              >
-                <div className="relative mx-auto mb-4">
-                  <div className="w-20 h-20 rounded-full overflow-hidden border-3 border-white shadow-xl group-hover:scale-110 transition-transform duration-500">
-                    <Image
-                      src={artisan.avatar}
-                      alt={artisan.name}
-                      width={80}
-                      height={80}
-                      className="object-cover"
-                    />
-                  </div>
-                  {artisan.verified && (
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg">
-                      <Award className="h-3 w-3 text-white" />
-                    </div>
-                  )}
-                </div>
-
-                <h4 className="font-serif font-semibold text-sm text-gray-900 mb-2 group-hover:text-amber-700 transition-colors">{artisan.name}</h4>
-                <p className="text-xs text-gray-600 mb-2 font-medium">{artisan.specialty}</p>
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-full px-3 py-1">
-                  <p className="text-xs text-amber-700 font-semibold">{artisan.followers} followers</p>
-                </div>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      </section>
 
       {/* Curated Feed */}
       <section>
@@ -586,12 +427,15 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
                   >
                     <div className="flex">
                       <div className="relative w-28 h-28 flex-shrink-0 bg-gradient-to-br from-amber-50 to-orange-50">
-                        <Image
-                          src={product.image}
-                          alt={product.title}
-                          fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
+                        {product.image && (
+                          <Image
+                            src={product.image}
+                            alt={product.title}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                            className="object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                        )}
 
                         {/* Like button overlay */}
                         <motion.button
@@ -618,14 +462,18 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
                       <CardContent className="p-4 flex-1 bg-gradient-to-br from-white to-amber-50/20">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full overflow-hidden ring-1 ring-amber-200">
-                              <Image
-                                src={product.artisanAvatar}
-                                alt={product.artisan}
-                                width={24}
-                                height={24}
-                                className="object-cover"
-                              />
+                            <div className="w-6 h-6 rounded-full overflow-hidden ring-1 ring-amber-200 flex items-center justify-center bg-amber-100 text-amber-700 font-bold text-xs">
+                              {product.artisanAvatar ? (
+                                <Image
+                                  src={product.artisanAvatar}
+                                  alt={product.artisan}
+                                  width={24}
+                                  height={24}
+                                  className="object-cover"
+                                />
+                              ) : (
+                                product.artisan.charAt(0).toUpperCase()
+                              )}
                             </div>
                             <div>
                               <span className="text-sm font-semibold text-gray-800">{product.artisan}</span>

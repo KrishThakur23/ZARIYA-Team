@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ai } from '@/ai/genkit';
 
 const PriceRequestSchema = {
   title: 'string',
@@ -40,9 +39,9 @@ export async function POST(request: NextRequest) {
       'default': 1.0
     };
 
-    const basePrice = basePrices[category] || basePrices.default;
-    const complexityMultiplier = complexityMultipliers[complexity] || 1.0;
-    const materialMultiplier = materialMultipliers[material] || 1.0;
+    const basePrice = basePrices[category as keyof typeof basePrices] || basePrices.default;
+    const complexityMultiplier = complexityMultipliers[complexity as keyof typeof complexityMultipliers] || 1.0;
+    const materialMultiplier = materialMultipliers[material as keyof typeof materialMultipliers] || 1.0;
     const timeMultiplier = Math.max(0.5, Math.min(2.0, timeSpent / 8)); // 8 hours = baseline
 
     const suggestedPrice = Math.round(basePrice * complexityMultiplier * materialMultiplier * timeMultiplier);

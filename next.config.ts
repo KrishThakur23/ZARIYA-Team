@@ -1,4 +1,4 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -28,11 +28,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
-    ],
-  },
-  devIndicators: {
-    allowedDevOrigins: [
-      '*.cluster-nle52mxuvfhlkrzyrq6g2cwb52.cloudworkstations.dev',
+      {
+        protocol: 'https',
+        hostname: 'zariya-products-2026-bucket.s3.us-east-1.amazonaws.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };

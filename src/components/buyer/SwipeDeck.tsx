@@ -48,41 +48,41 @@ export default function SwipeDeck({
   const undoTimeoutRef = useRef<NodeJS.Timeout>();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Load localStorage products (User Request)
   useEffect(() => {
-    try {
-      const localProducts = JSON.parse(localStorage.getItem('zariya_products') || '[]');
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch('/api/products');
+        if (res.ok) {
+          const remoteProducts = await res.json();
 
-      if (localProducts.length > 0) {
-        // Transform to match SwipeDeck format
-        const transformedProducts = localProducts.map((p: any) => ({
-          id: p.id,
-          title: p.title,
-          artisan: p.artisan || 'You',
-          price: p.price || 0,
-          image: p.images?.enhanced || p.images?.original || 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=600&fit=crop', // Fallback
-          description: p.story || p.description || 'Beautiful handcrafted item',
-          rating: p.rating || 5.0,
-          location: p.location || 'India',
-          // category: p.category || 'HANDCRAFTED', // Optional, extra props are fine
-        }));
+          if (remoteProducts.length > 0) {
+            const validProducts = remoteProducts.filter((p: any) =>
+              p.status === 'published' && p.originalImage && typeof p.originalImage === 'string' && p.originalImage.trim() !== ''
+            );
 
-        // Merge: localStorage products FIRST, then mock products
-        // We use a functional update to ensure we don't overwrite if initialProducts changes precisely when this runs (unlikely but safe)
-        // Actually, just using initialProducts is fine as it's a prop
-        setProducts([...transformedProducts, ...initialProducts]);
-        console.log('SwipeDeck: Loaded', transformedProducts.length, 'local products');
+            // Transform to match SwipeDeck format
+            const transformedProducts = validProducts.map((p: any) => ({
+              id: p.id,
+              title: p.title,
+              artisan: p.artisan || 'You',
+              price: p.price || 0,
+              image: p.originalImage,
+              description: p.story || p.description || 'Beautiful handcrafted item',
+              rating: p.rating || 5.0,
+              location: p.location || 'India',
+            }));
+
+            // Only use remote AWS products securely downloaded over API
+            setProducts(transformedProducts);
+            console.log('SwipeDeck Rendered published products:', transformedProducts.length);
+          }
+        }
+      } catch (error) {
+        console.error('SwipeDeck: Failed to load products:', error);
       }
-    } catch (error) {
-      console.error('SwipeDeck: Failed to load products:', error);
-    }
-  }, [initialProducts]); // Dependency on initialProducts to re-run if props change? Maybe just [] if we want it once.
-  // Actually, typically we want to run this once on mount, but if initialProducts comes from parent, we might want to respect it.
-  // The user's code had [] dependency. Let's stick to [] or [initialProducts]. 
-  // If we change dependency to [initialProducts], it might reset the deck if parent rerenders. 
-  // Let's use [] as per user instruction pattern, but since we are using initialProducts in the setter, we should confirm behavior.
-  // Using [] is safer for maintaining state, but we need to ensure we have access to initialProducts.
-  // Since we are inside the component, we have access to the closure.
+    };
+    fetchProducts();
+  }, [initialProducts]);
 
   // Auto-dismiss toast after 5 seconds
   useEffect(() => {
@@ -262,8 +262,8 @@ export default function SwipeDeck({
             >
               <motion.div
                 className={`w-40 h-40 rounded-full flex items-center justify-center shadow-2xl ${swipeDirection === 'left' ? 'bg-red-500' :
-                    swipeDirection === 'right' ? 'bg-green-500' :
-                      swipeDirection === 'up' ? 'bg-yellow-500' : ''
+                  swipeDirection === 'right' ? 'bg-green-500' :
+                    swipeDirection === 'up' ? 'bg-yellow-500' : ''
                   }`}
                 animate={{
                   scale: [1, 1.1, 1],
