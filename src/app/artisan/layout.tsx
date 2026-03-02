@@ -8,7 +8,7 @@ export default function ArtisanLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AssistantProvider initialMessage="Welcome to Zariya! I'm your voice assistant. Let's help you create amazing product listings.">
+    <AssistantProvider>
       {children}
       <VoiceAssistant />
     </AssistantProvider>

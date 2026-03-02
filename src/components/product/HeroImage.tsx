@@ -75,17 +75,16 @@ export default function HeroImage({ images, title }: HeroImageProps) {
         {availableImages.map((image, index) => (
           <motion.div
             key={image.key}
-            className={`flex-shrink-0 w-20 h-20 overflow-hidden rounded-xl border-2 cursor-pointer transition-all duration-300 ${
-              selectedImage === image.key
+            className={`flex-shrink-0 w-20 h-20 overflow-hidden rounded-xl border-2 cursor-pointer transition-all duration-300 ${selectedImage === image.key
                 ? 'border-amber-600 shadow-lg scale-105'
                 : 'border-amber-200 hover:border-amber-400'
-            }`}
+              }`}
             onClick={() => setSelectedImage(image.key)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
             <Image
-              src={image.src}
+              src={image.src || ''}
               alt={`${image.label} thumbnail`}
               width={80}
               height={80}
@@ -119,7 +118,7 @@ export default function HeroImage({ images, title }: HeroImageProps) {
                 height={1200}
                 className="object-contain w-full h-full rounded-lg"
               />
-              
+
               {/* Close Button */}
               <button
                 className="absolute top-4 right-4 bg-black/70 text-white p-2 rounded-full hover:bg-black/90 transition-colors"
@@ -143,7 +142,7 @@ export default function HeroImage({ images, title }: HeroImageProps) {
                   >
                     <ChevronLeft className="w-6 h-6" />
                   </button>
-                  
+
                   <button
                     className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/70 text-white p-2 rounded-full hover:bg-black/90 transition-colors"
                     onClick={() => {

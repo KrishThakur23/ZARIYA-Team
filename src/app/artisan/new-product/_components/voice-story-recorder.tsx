@@ -68,7 +68,7 @@ export default function VoiceStoryRecorder({ onTranscriptUpdate, onAiResponse, i
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.lang = getLangCode(activeLanguage);
+    recognition.lang = getLangCode(activeLanguage || 'en');
 
     recognition.onstart = () => {
       // Prevent voice feedback loops by stopping any currently playing AI response

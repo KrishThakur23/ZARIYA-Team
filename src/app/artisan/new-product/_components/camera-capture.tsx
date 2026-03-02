@@ -33,10 +33,10 @@ export default function CameraCapture({ onCapture, isProcessing, onCameraReady }
         setHasCameraPermission(false);
         return;
       }
-      
+
       try {
         // Request camera access with audio disabled to prevent audio conflicts
-        stream = await navigator.mediaDevices.getUserMedia({ 
+        stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: false // Explicitly disable audio to prevent conflicts with voice assistant
         });
@@ -45,7 +45,7 @@ export default function CameraCapture({ onCapture, isProcessing, onCameraReady }
           videoRef.current.srcObject = stream;
           // Ensure video is muted to prevent any audio interference
           videoRef.current.muted = true;
-          
+
           // Add event listeners to ensure video loads properly
           videoRef.current.onloadedmetadata = () => {
             console.log('Video metadata loaded, dimensions:', videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight);
@@ -54,12 +54,12 @@ export default function CameraCapture({ onCapture, isProcessing, onCameraReady }
               videoRef.current.volume = 0;
             }
           };
-          
+
           videoRef.current.oncanplay = () => {
             console.log('Video can play, starting playback');
             videoRef.current?.play().catch(console.error);
           };
-          
+
           // Force play after a short delay if video doesn't start automatically
           setTimeout(() => {
             if (videoRef.current && videoRef.current.paused) {
@@ -114,13 +114,12 @@ export default function CameraCapture({ onCapture, isProcessing, onCameraReady }
   return (
     <div className="space-y-4">
       <div className="relative aspect-video w-full rounded-md border bg-muted flex items-center justify-center overflow-hidden">
-        <video 
-          ref={videoRef} 
-          className="w-full h-full object-cover" 
-          autoPlay 
-          muted 
-          playsInline 
-          volume={0}
+        <video
+          ref={videoRef}
+          className="w-full h-full object-cover"
+          autoPlay
+          muted
+          playsInline
           onLoadedMetadata={() => {
             // Ensure video is muted when metadata loads
             if (videoRef.current) {
@@ -133,13 +132,13 @@ export default function CameraCapture({ onCapture, isProcessing, onCameraReady }
             console.error('Video error:', e);
           }}
         />
-        
+
         {!isInitialized && hasCameraPermission !== false && (
           <div className="absolute inset-0 flex items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
-        
+
         {hasCameraPermission === false && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white p-4">
             <VideoOff className="h-12 w-12 mb-4" />
@@ -153,14 +152,14 @@ export default function CameraCapture({ onCapture, isProcessing, onCameraReady }
         )}
 
         {hasCameraPermission === null && (
-            <div className="absolute inset-0 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
         )}
       </div>
-      <Button 
-        onClick={handleCaptureClick} 
-        disabled={hasCameraPermission !== true || isProcessing} 
+      <Button
+        onClick={handleCaptureClick}
+        disabled={hasCameraPermission !== true || isProcessing}
         className="w-full"
         aria-label="Capture Photo"
       >

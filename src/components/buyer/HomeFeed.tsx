@@ -257,7 +257,7 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Link href={`/buyer/product/${product.id}`}>
+                <Link href={`/product/${product.id}`}>
                   <Card className="overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500 group cursor-pointer bg-white/95 backdrop-blur-sm">
                     <CardHeader className="p-0 relative">
                       <div className="aspect-[4/5] relative overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50">
@@ -420,7 +420,7 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
                 transition={{ delay: index * 0.1 }}
                 exit={{ opacity: 0, y: -20 }}
               >
-                <Link href={`/buyer/product/${product.id}`}>
+                <Link href={`/product/${product.id}`}>
                   <Card
                     className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-500 group cursor-pointer bg-white/95 backdrop-blur-sm"
                     onClick={() => onProductClick?.(product.id)}

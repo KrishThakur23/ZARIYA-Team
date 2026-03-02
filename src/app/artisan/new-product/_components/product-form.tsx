@@ -94,6 +94,11 @@ export default function ProductForm() {
   const instructionIndex = useRef(0);
   const instructionInterval = useRef<NodeJS.Timeout | null>(null);
 
+  const videoConstraints = {
+    width: 1280,
+    height: 720,
+    facingMode: "environment"
+  };
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -130,7 +135,6 @@ export default function ProductForm() {
 
   const processAndEnhanceImage = (dataUrl: string) => {
     setImages({ original: dataUrl, enhanced: null, cartoon: null });
-    /* auto-removed redeclaration */
     setAssistantMessage(t.processingPhoto as string);
 
     startAiTransition(async () => {
@@ -143,7 +147,6 @@ export default function ProductForm() {
         if (result.fallback) {
           // Use client-side enhancement (AI unavailable)
           try {
-            /* auto-removed redeclaration */
             setAssistantMessage(t.processingMagic as string);
             const enhancedImage = await enhanceImageWithCanvas(dataUrl);
             const cartoonImage = await createCartoonEffect(dataUrl);
@@ -153,7 +156,6 @@ export default function ProductForm() {
               title: 'Image Enhanced!',
               description: 'Your images are ready.'
             });
-            /* auto-removed redeclaration */
             setAssistantMessage(t.photoGreatNext as string);
           } catch (enhanceError) {
             // Even if client processing fails, show original
@@ -163,7 +165,6 @@ export default function ProductForm() {
               title: 'Image Ready!',
               description: 'Your photo is ready.'
             });
-            /* auto-removed redeclaration */
             setAssistantMessage(t.photoGreatNextFallback as string);
           }
         } else {
@@ -173,7 +174,6 @@ export default function ProductForm() {
             title: 'AI Enhanced!',
             description: 'Your images have been enhanced by AI.'
           });
-          /* auto-removed redeclaration */
           setAssistantMessage(t.photoGreatNext as string);
         }
       } else {
@@ -183,7 +183,6 @@ export default function ProductForm() {
           title: 'Image Ready!',
           description: 'Your photo is ready.'
         });
-        /* auto-removed redeclaration */
         setAssistantMessage(t.photoGreatNextFallback as string);
       }
     });
@@ -214,7 +213,6 @@ export default function ProductForm() {
       return;
     }
 
-    /* auto-removed redeclaration */
     setAssistantMessage(t.loadingPhoto as string);
 
     const reader = new FileReader();
@@ -226,7 +224,6 @@ export default function ProductForm() {
         title: 'Upload Failed',
         description: 'Could not read the file. Please try again.'
       });
-      /* auto-removed redeclaration */
       setAssistantMessage(t.readError as string);
     };
 
@@ -240,7 +237,6 @@ export default function ProductForm() {
           title: 'Upload Failed',
           description: 'Could not process the image. Please try again.'
         });
-        /* auto-removed redeclaration */
         setAssistantMessage(t.processError as string);
       }
     };
@@ -249,7 +245,6 @@ export default function ProductForm() {
   };
 
   const onGenerateDetails = () => {
-    /* auto-removed redeclaration */
     setAssistantMessage(t.generatingPricing as string);
     startAiTransition(async () => {
       const formData = new FormData();
@@ -262,7 +257,6 @@ export default function ProductForm() {
       });
 
       const result = await handleGenerateDetails(formData);
-      /* auto-removed redeclaration */
       if ('error' in result && result.error) {
         toast({ variant: 'destructive', title: 'Generation Failed', description: 'Please check your inputs.' });
         setAssistantMessage(t.generateError as string);
@@ -285,12 +279,10 @@ export default function ProductForm() {
     setStoryData(data);
     form.setValue('story', data.craft_story, { shouldValidate: true });
     form.setValue('description', data.short_description, { shouldValidate: true });
-    /* auto-removed redeclaration */
     setAssistantMessage(t.storyCaptured as string);
   };
 
   const onSubmit = async (data: ProductFormValues) => {
-    /* auto-removed redeclaration */
     setAssistantMessage(t.savingProduct as string);
     try {
       let imageKey = '';
@@ -355,7 +347,7 @@ export default function ProductForm() {
       toast({ title: 'Product Listed!', description: 'Your creation is now live on the marketplace.' });
 
       setTimeout(() => {
-        router.push('/buyer');
+        router.push('/');
       }, 1500);
 
     } catch (error) {
@@ -374,7 +366,6 @@ export default function ProductForm() {
       const currentStory = form.getValues('story');
       if (currentStory && currentStory.trim().length > 10) {
         setStep('pricing');
-        /* auto-removed redeclaration */
         setAssistantMessage(t.setPrice as string);
       } else {
         setStep('pricing');
@@ -690,7 +681,7 @@ export default function ProductForm() {
                   </div>
 
                   <div className="w-full max-w-xs mx-auto mb-4">
-                    <Select value={activeLanguage} onValueChange={setActiveLanguage}>
+                    <Select value={activeLanguage || undefined} onValueChange={setActiveLanguage}>
                       <SelectTrigger className="border-2 border-amber-200 focus:border-amber-400 bg-white">
                         <SelectValue placeholder="Select Language" />
                       </SelectTrigger>

@@ -18,7 +18,7 @@ export default function ArtisanOnboardingPage() {
             Welcome to Your Creative Journey
           </h1>
           <p className="text-lg text-gray-700 mb-6 leading-relaxed max-w-lg mx-auto">
-            Transform your passion into profit. Watch this quick guide to see how easy it is to 
+            Transform your passion into profit. Watch this quick guide to see how easy it is to
             showcase your art to the world with our AI-powered platform.
           </p>
         </div>
@@ -35,7 +35,7 @@ export default function ArtisanOnboardingPage() {
               muted
               playsInline
             ></video>
-            
+
             {/* Overlay Content */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 flex flex-col items-center justify-center p-6">
               <div className="text-center space-y-4">
@@ -92,9 +92,9 @@ export default function ArtisanOnboardingPage() {
 
         {/* Main CTA */}
         <Button asChild size="lg" className="w-full md:w-auto px-12 py-4 text-lg bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 border-0 shadow-lg group">
-          <Link href="/artisan/new-product">
+          <Link href="/artisan/profile-setup">
             <Sparkles className="mr-2 h-5 w-5" />
-            Start Your First Listing
+            Create Artisan Profile
             <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
           </Link>
         </Button>
