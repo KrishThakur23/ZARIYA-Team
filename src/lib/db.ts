@@ -93,6 +93,11 @@ export async function getProduct(productId: string): Promise<Product | null> {
 export async function listProducts(): Promise<Product[]> {
     const command = new ScanCommand({
         TableName: TABLE_NAME,
+        Limit: 20,
+        ProjectionExpression: "productId, title, price, originalImage, category, createdAt, imageKey, #s",
+        ExpressionAttributeNames: {
+            "#s": "status"
+        }
     });
 
     try {

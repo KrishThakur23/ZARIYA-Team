@@ -42,9 +42,16 @@ const productSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters.'),
   category: z.string().min(1, 'Please select a category.'),
   dimensions: z.string().min(3, 'Please provide dimensions, e.g., 10" x 12".'),
-  price: z.coerce.number().optional(), // Make price optional for now
+  price: z.coerce.number().min(1, 'Please enter a price.'),
   story: z.string().optional(),
   description: z.string().optional(),
+  material: z.string().optional(),
+  tags: z.string().optional(),
+  quantity: z.coerce.number().min(1, 'Please enter a quantity.'),
+  suggestedPrice: z.number().optional(),
+  weight: z.number().optional(),
+  shippingTime: z.string().optional(),
+  shippingCost: z.number().optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -108,8 +115,69 @@ export default function ProductForm() {
       price: 0,
       story: '',
       description: '',
+      material: '',
+      tags: '',
+      quantity: 1,
+      suggestedPrice: 0,
+      weight: 0,
+      shippingTime: '3-5 days',
+      shippingCost: 0,
     },
   });
+
+  const getAiAutofill = async (dataUrl: string) => {
+    startAiTransition(async () => {
+      try {
+        console.log("Uploading photo for autofill...");
+        const presignRes = await fetch('/api/s3/presign', {
+          method: 'POST',
+          body: JSON.stringify({ filename: `autofill-${Date.now()}.jpg` })
+        });
+        const presignData = await presignRes.json();
+        if (presignData.uploadUrl && presignData.objectKey) {
+          const res = await fetch(dataUrl);
+          const blob = await res.blob();
+          await fetch(presignData.uploadUrl, {
+            method: 'PUT',
+            body: blob,
+            headers: { 'Content-Type': 'image/jpeg' }
+          });
+          const imageKey = presignData.objectKey;
+          setAssistantMessage("🔍 AI analyzing your product...");
+          const autofillRes = await fetch('/api/ai/autofill', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageKey, language: activeLanguage })
+          });
+          if (autofillRes.ok) {
+            const data = await autofillRes.json();
+            console.log("Autofill Success:", data);
+            form.setValue("title", data.title || "", { shouldValidate: true });
+            form.setValue("description", data.description || "", { shouldValidate: true });
+            form.setValue("category", data.category || "other", { shouldValidate: true });
+            form.setValue("suggestedPrice", data.suggested_price || 0, { shouldValidate: true });
+            form.setValue("price", data.suggested_price || 0, { shouldValidate: true });
+            form.setValue("dimensions", data.estimated_dimensions || "", { shouldValidate: true });
+            form.setValue("material", data.material_guess || "", { shouldValidate: true });
+            form.setValue("tags", data.tags?.join(", ") || "", { shouldValidate: true });
+
+            // Smart defaults for new fields
+            form.setValue("quantity", 1, { shouldValidate: true });
+            form.setValue("shippingTime", "3-5 days", { shouldValidate: true });
+            form.setValue("weight", 200, { shouldValidate: true });
+            form.setValue("shippingCost", 50, { shouldValidate: true });
+
+            toast({
+              title: 'Auto-filled Details',
+              description: '✨ AI filled product details for you.'
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Autofill execution failed", err);
+      }
+    });
+  };
 
   useEffect(() => {
     const giveInstruction = () => {
@@ -137,7 +205,11 @@ export default function ProductForm() {
     setImages({ original: dataUrl, enhanced: null, cartoon: null });
     setAssistantMessage(t.processingPhoto as string);
 
+    // Call autofill extracted function
+    getAiAutofill(dataUrl);
+
     startAiTransition(async () => {
+
       const formData = new FormData();
       formData.append('productPhotoDataUri', dataUrl);
       const result = await handleEnhanceImage(formData);
@@ -535,129 +607,224 @@ export default function ProductForm() {
         );
       case 'details':
         return (
-          <div className="w-full max-w-4xl mx-auto">
+          <div className="w-full max-w-6xl mx-auto">
             <div className="text-center mb-8">
               <h1 className="text-4xl font-serif font-bold mb-4 bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                Tell Us About Your Creation
+                Product Details
               </h1>
               <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-                Help potential buyers understand your masterpiece. Our AI can enhance your descriptions to make them more compelling.
+                Review and edit your product listing details.
               </p>
             </div>
 
-            <Card className="border-0 shadow-2xl bg-gradient-to-br from-white to-amber-50/30">
-              <CardHeader className="pb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full">
-                    <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <CardTitle className="text-2xl font-serif font-bold text-gray-800">Product Details</CardTitle>
-                    <p className="text-gray-600">Share the story behind your masterpiece</p>
-                  </div>
-                </div>
-              </CardHeader>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-1 space-y-6">
+                <Card className="border-0 shadow-2xl bg-gradient-to-br from-white to-amber-50/30 overflow-hidden sticky top-8">
+                  <CardHeader className="pb-4 bg-gradient-to-r from-amber-500 to-orange-600">
+                    <CardTitle className="text-lg font-serif font-bold text-white flex items-center gap-2">
+                      <FileImage className="w-5 h-5" /> Product Preview
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4">
+                    <div className="aspect-square rounded-xl overflow-hidden shadow-inner border-2 border-white bg-gray-50">
+                      {images.original ? (
+                        <Image src={images.original} alt="Product Preview" width={400} height={400} className="object-cover w-full h-full" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">No image</div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
+              <div className="lg:col-span-2 space-y-6">
+                <Card className="border-0 shadow-2xl bg-white">
+                  <CardHeader className="pb-4 border-b border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-amber-500" />
+                      <CardTitle className="text-xl font-serif font-bold text-gray-800">
+                        AI Generated Information
+                      </CardTitle>
+                    </div>
+                    <p className="text-sm text-amber-600 font-medium flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> AI Suggested — You can edit
+                    </p>
+                  </CardHeader>
+                  <CardContent className="space-y-6 p-6">
                     <FormField control={form.control} name="title" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-base font-semibold text-gray-800">Product Title</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="e.g., Hand-carved Wooden Bowl"
-                            className="h-12 text-lg border-2 border-gray-200 focus:border-amber-400 rounded-xl"
-                            {...field}
-                          />
+                          <Input disabled={isAiLoading} className="h-12 text-lg border-2 border-amber-100 focus:border-amber-400 rounded-xl" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
 
-                    <FormField control={form.control} name="category" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold text-gray-800">Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-12 text-lg border-2 border-gray-200 focus:border-amber-400 rounded-xl">
-                              <SelectValue placeholder="Select a category" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="pottery">🏺 Pottery</SelectItem>
-                            <SelectItem value="woodworking">🪵 Woodworking</SelectItem>
-                            <SelectItem value="jewelry">💎 Jewelry</SelectItem>
-                            <SelectItem value="textiles">🧵 Textiles</SelectItem>
-                            <SelectItem value="painting">🎨 Painting</SelectItem>
-                            <SelectItem value="ceramics">🏺 Ceramics</SelectItem>
-                            <SelectItem value="glasswork">🪟 Glasswork</SelectItem>
-                            <SelectItem value="other">✨ Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-
-                    <FormField control={form.control} name="dimensions" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold text-gray-800">Dimensions</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder='e.g., 10" x 12" x 4"'
-                            className="h-12 text-lg border-2 border-gray-200 focus:border-amber-400 rounded-xl"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                  </div>
-
-                  <div className="space-y-4">
                     <FormField control={form.control} name="description" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-base font-semibold text-gray-800">Description</FormLabel>
                         <FormControl>
-                          <Textarea
-                            placeholder="Describe your product, its unique features, and what makes it special..."
-                            rows={8}
-                            className="text-lg border-2 border-gray-200 focus:border-amber-400 rounded-xl resize-none"
-                            {...field}
-                          />
+                          <Textarea disabled={isAiLoading} rows={4} className="text-lg border-2 border-amber-100 focus:border-amber-400 rounded-xl resize-none" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
-                  </div>
-                </div>
 
-                <div className="pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField control={form.control} name="category" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-semibold text-gray-800">Category</FormLabel>
+                          <FormControl>
+                            <Input disabled={isAiLoading} className="h-12 text-lg border-2 border-amber-100 focus:border-amber-400 rounded-xl" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="dimensions" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-semibold text-gray-800">Estimated Dimensions</FormLabel>
+                          <FormControl>
+                            <Input disabled={isAiLoading} className="h-12 text-lg border-2 border-amber-100 focus:border-amber-400 rounded-xl" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-2xl bg-white">
+                  <CardHeader className="pb-4 border-b border-gray-100">
+                    <CardTitle className="text-xl font-serif font-bold text-gray-800">Product Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6 p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField control={form.control} name="material" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-semibold text-gray-800">Material</FormLabel>
+                          <FormControl>
+                            <Input disabled={isAiLoading} placeholder="e.g. Wood, Clay, Leather" className="h-12 border-2 border-gray-200 focus:border-amber-400 rounded-xl" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="quantity" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-semibold text-gray-800">Quantity Available</FormLabel>
+                          <FormControl>
+                            <Input disabled={isAiLoading} type="number" min="1" className="h-12 border-2 border-gray-200 focus:border-amber-400 rounded-xl" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
+                    <FormField control={form.control} name="tags" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold text-gray-800">Tags (comma separated)</FormLabel>
+                        <FormControl>
+                          <Input disabled={isAiLoading} placeholder="handmade, vintage, rustic" className="h-12 border-2 border-gray-200 focus:border-amber-400 rounded-xl" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-2xl bg-white">
+                  <CardHeader className="pb-4 border-b border-gray-100">
+                    <CardTitle className="text-xl font-serif font-bold text-gray-800">Pricing</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6 p-6">
+                    <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex justify-between items-center">
+                      <span className="text-amber-800 font-medium flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" /> AI Suggested Price
+                      </span>
+                      <span className="text-xl font-bold text-amber-900">₹{form.watch('suggestedPrice') || 0}</span>
+                    </div>
+                    <FormField control={form.control} name="price" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold text-gray-800">Your Price (₹)</FormLabel>
+                        <FormControl>
+                          <Input disabled={isAiLoading} type="number" className="h-14 text-2xl font-bold border-2 border-gray-200 focus:border-amber-400 rounded-xl" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-2xl bg-white">
+                  <CardHeader className="pb-4 border-b border-gray-100">
+                    <CardTitle className="text-xl font-serif font-bold text-gray-800">Shipping</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6 p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <FormField control={form.control} name="weight" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-semibold text-gray-800">Weight (grams)</FormLabel>
+                          <FormControl>
+                            <Input disabled={isAiLoading} type="number" className="h-12 border-2 border-gray-200 focus:border-amber-400 rounded-xl" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="shippingTime" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-semibold text-gray-800">Shipping Time</FormLabel>
+                          <Select disabled={isAiLoading} onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-amber-400 rounded-xl">
+                                <SelectValue placeholder="Select timeframe" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="1-2 days">1-2 days</SelectItem>
+                              <SelectItem value="3-5 days">3-5 days</SelectItem>
+                              <SelectItem value="1 week">1 week</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="shippingCost" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-semibold text-gray-800">Shipping Cost (₹)</FormLabel>
+                          <FormControl>
+                            <Input disabled={isAiLoading} type="number" className="h-12 border-2 border-gray-200 focus:border-amber-400 rounded-xl" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="flex gap-4 pt-4">
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={onGenerateDetails}
+                    onClick={() => images.original && getAiAutofill(images.original)}
                     disabled={isAiLoading}
-                    className="w-full md:w-auto px-8 py-3 text-lg border-2 border-amber-300 hover:border-amber-400 hover:bg-amber-50 rounded-xl"
+                    className="flex-1 h-14 text-lg border-2 border-amber-300 hover:border-amber-400 hover:bg-amber-50 rounded-xl font-semibold text-amber-700"
                   >
-                    <Sparkles className="mr-3 h-5 w-5" />
-                    {isAiLoading ? 'Generating with AI...' : 'Enhance with AI'}
+                    {isAiLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5" />}
+                    Regenerate AI Description
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={async () => {
+                      const isValid = await form.trigger(['title', 'category', 'price', 'quantity']);
+                      if (isValid) setStep('story');
+                    }}
+                    disabled={isAiLoading}
+                    className="flex-1 h-14 text-lg bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-xl shadow-lg font-bold"
+                  >
+                    Continue to Publish <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </div>
-
-                {isAiLoading && (
-                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-2xl border border-amber-200 text-center">
-                    <div className="flex items-center justify-center gap-3 mb-3">
-                      <div className="animate-spin rounded-full h-6 w-6 border-2 border-amber-600 border-t-transparent"></div>
-                      <span className="text-lg font-medium text-amber-800">AI is crafting your perfect description...</span>
-                    </div>
-                    <p className="text-sm text-amber-700">This may take a few moments</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         );
       case 'story':

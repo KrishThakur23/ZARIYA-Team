@@ -38,6 +38,7 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
   const [mergedTrendingProducts, setMergedTrendingProducts] = useState<any[]>([]);
   const [mergedCuratedFeed, setMergedCuratedFeed] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const trendingRef = useRef<HTMLDivElement>(null);
 
   // Helper function to get time ago string - HOISTED
@@ -61,7 +62,9 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
         // Fetch Products from AWS
         const res = await fetch('/api/products');
         if (res.ok) {
-          const remoteProducts = await res.json();
+          const data = await res.json();
+          const remoteProducts = data.products || [];
+
           if (remoteProducts.length > 0) {
             console.log('📦 Loaded from API:', remoteProducts.length, 'products');
 
@@ -107,6 +110,8 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
         }
       } catch (error) {
         console.error('Failed to load products:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -174,6 +179,22 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
     if (hour < 17) return 'Good afternoon';
     return 'Good evening';
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <p className="text-gray-500 text-lg">Loading products...</p>
+      </div>
+    );
+  }
+
+  if (!mergedTrendingProducts.length && !mergedCuratedFeed.length) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <p className="text-gray-500 text-lg">No products available</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-20">

@@ -53,7 +53,8 @@ export default function SwipeDeck({
       try {
         const res = await fetch('/api/products');
         if (res.ok) {
-          const remoteProducts = await res.json();
+          const data = await res.json();
+          const remoteProducts = data.products || [];
 
           if (remoteProducts.length > 0) {
             const validProducts = remoteProducts.filter((p: any) =>

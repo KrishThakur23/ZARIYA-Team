@@ -88,15 +88,17 @@ export default function VoiceStoryRecorder({ onTranscriptUpdate, onAiResponse, i
     };
 
     recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
-      setIsListening(false);
-      if (event.error !== 'no-speech') {
+      if (event.error === 'no-speech') {
+        console.warn('Speech recognition warning:', event.error);
+      } else {
+        console.error('Speech recognition error:', event.error);
         toast({
           variant: 'destructive',
           title: 'Microphone Error',
           description: `Error: ${event.error}`,
         });
       }
+      setIsListening(false);
     };
 
     recognition.onend = () => {

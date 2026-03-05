@@ -52,7 +52,8 @@ export default function ProductPage() {
                 try {
                     const res = await fetch('/api/products');
                     if (res.ok) {
-                        const remoteProducts = await res.json();
+                        const data = await res.json();
+                        const remoteProducts = data.products || [];
                         const foundRemote = remoteProducts.find((p: any) => p.id === params.id);
 
                         if (foundRemote) {
