@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { 
   Home, 
   Grid3X3, 
@@ -25,6 +26,7 @@ export default function BottomNav({
   cartCount = 0,
   wishlistCount = 0 
 }: BottomNavProps) {
+  const router = useRouter();
   const [currentTab, setCurrentTab] = useState(activeTab);
 
   const tabs = [
@@ -37,6 +39,14 @@ export default function BottomNav({
   const handleTabClick = (tabId: 'home' | 'categories' | 'discover' | 'profile') => {
     setCurrentTab(tabId);
     onTabChange?.(tabId);
+  };
+
+  const handleCartClick = () => {
+    router.push('/cart');
+  };
+
+  const handleWishlistClick = () => {
+    router.push('/favorites');
   };
 
   return (
@@ -71,17 +81,6 @@ export default function BottomNav({
                     isActive && "drop-shadow-sm"
                   )} 
                 />
-                
-                {/* Badge for cart/wishlist counts */}
-                {((tab.id === 'profile' && cartCount > 0) || (tab.id === 'discover' && wishlistCount > 0)) && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center font-medium"
-                  >
-                    {tab.id === 'profile' ? cartCount : wishlistCount}
-                  </motion.div>
-                )}
               </div>
               
               <motion.span
@@ -118,19 +117,31 @@ export default function BottomNav({
       {/* Floating action buttons for quick access */}
       <div className="absolute -top-8 right-4 flex gap-2">
         <motion.button
-          className="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+          onClick={handleWishlistClick}
+          className="bg-gradient-to-r from-pink-500 to-red-500 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-shadow relative"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
         >
           <Heart size={20} />
+          {wishlistCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-white text-pink-600 text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center font-bold border-2 border-pink-500">
+              {wishlistCount > 9 ? '9+' : wishlistCount}
+            </span>
+          )}
         </motion.button>
         
         <motion.button
-          className="bg-gradient-to-r from-red-500 to-pink-500 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+          onClick={handleCartClick}
+          className="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-shadow relative"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
         >
           <ShoppingCart size={20} />
+          {cartCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-white text-orange-600 text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center font-bold border-2 border-orange-500">
+              {cartCount > 9 ? '9+' : cartCount}
+            </span>
+          )}
         </motion.button>
       </div>
     </motion.nav>

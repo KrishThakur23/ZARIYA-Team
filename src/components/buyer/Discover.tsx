@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Star, Heart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -21,105 +21,60 @@ interface DiscoverProps {
   onProductClick?: (product: Product) => void;
 }
 
-// Beautiful craft products with working demo images
-const sampleProducts: Product[] = [
-  {
-    id: '1',
-    title: 'Handwoven Kanjeevaram Silk Saree',
-    price: 25000,
-    image: 'https://picsum.photos/400/600?random=1',
-    description: 'Traditional South Indian silk with intricate gold zari work',
-    artisan: 'Meera Patel',
-    location: 'Kanchipuram, India',
-    rating: 4.8
-  },
-  {
-    id: '2',
-    title: 'Ceramic Teapot with Traditional Motifs',
-    price: 3500,
-    image: 'https://picsum.photos/400/600?random=2',
-    description: 'Hand-thrown pottery with beautiful blue and white patterns',
-    artisan: 'Rajesh Kumar',
-    location: 'Jaipur, India',
-    rating: 4.6
-  },
-  {
-    id: '3',
-    title: 'Wooden Sculpture - Dancing Peacock',
-    price: 12000,
-    image: 'https://picsum.photos/400/600?random=3',
-    description: 'Intricately carved sandalwood sculpture',
-    artisan: 'Vikram Singh',
-    location: 'Mysore, India',
-    rating: 4.9
-  },
-  {
-    id: '4',
-    title: 'Hand-Embroidered Cushion Covers',
-    price: 2800,
-    image: 'https://picsum.photos/400/600?random=4',
-    description: 'Traditional chikankari embroidery on cotton',
-    artisan: 'Fatima Khan',
-    location: 'Lucknow, India',
-    rating: 4.7
-  },
-  {
-    id: '5',
-    title: 'Brass Wind Chimes',
-    price: 4500,
-    image: 'https://picsum.photos/400/600?random=5',
-    description: 'Musical chimes with traditional Indian patterns',
-    artisan: 'Arjun Mehta',
-    location: 'Moradabad, India',
-    rating: 4.5
-  },
-  {
-    id: '6',
-    title: 'Hand-Painted Ceramic Bowl Set',
-    price: 3200,
-    image: 'https://picsum.photos/400/600?random=6',
-    description: 'Set of 4 bowls with traditional Rajasthani motifs',
-    artisan: 'Priya Sharma',
-    location: 'Udaipur, India',
-    rating: 4.8
-  },
-  {
-    id: '7',
-    title: 'Silk Wall Hanging',
-    price: 8500,
-    image: 'https://picsum.photos/400/600?random=7',
-    description: 'Beautiful silk tapestry with nature motifs',
-    artisan: 'Sunita Devi',
-    location: 'Varanasi, India',
-    rating: 4.9
-  },
-  {
-    id: '8',
-    title: 'Handcrafted Jewelry Box',
-    price: 6800,
-    image: 'https://picsum.photos/400/600?random=8',
-    description: 'Intricately carved wooden jewelry box',
-    artisan: 'Kiran Patel',
-    location: 'Ahmedabad, India',
-    rating: 4.6
-  }
-];
+// Products will be loaded from API
 
 export default function Discover({ onProductClick }: DiscoverProps) {
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [appreciatedCount, setAppreciatedCount] = useState(0);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // Load products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch('/api/products');
+        if (res.ok) {
+          const data = await res.json();
+          const remoteProducts = data.products || [];
+          
+          // Transform to match SwipeDeck format
+          const transformedProducts = remoteProducts
+            .filter((p: any) => p.status === 'published' && p.originalImage)
+            .map((p: any) => ({
+              id: p.id,
+              title: p.title,
+              artisan: p.artisan || 'Unknown Artisan',
+              price: p.price || 0,
+              image: p.originalImage,
+              description: p.story || p.description || 'Beautiful handcrafted item',
+              rating: p.rating || 5.0,
+              location: p.location || 'India',
+            }));
+
+          setProducts(transformedProducts);
+        }
+      } catch (error) {
+        console.error('Failed to load products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   // Load initial counts
-  useState(() => {
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const cart = JSON.parse(localStorage.getItem('zariya_cart') || '[]');
       const wishlist = JSON.parse(localStorage.getItem('zariya_wishlist') || '[]');
       setCartCount(cart.length);
       setWishlistCount(wishlist.length);
     }
-  });
+  }, []);
 
   const handleAddToCart = (product: Product) => {
     try {
@@ -206,14 +161,30 @@ export default function Discover({ onProductClick }: DiscoverProps) {
       {/* Main Card Container - Centered Like Reference */}
       <div className="absolute inset-0 pt-12 pb-4 flex items-center justify-center px-6">
         <div className="w-full max-w-md mx-auto h-[750px]">
-          <SwipeDeck
-            products={sampleProducts}
-            onProductTap={handleProductTap}
-            onAddToCart={handleAddToCart}
-            onAddToWishlist={handleAddToWishlist}
-            onAppreciateArtist={handleAppreciateArtist}
-            onDismissProduct={handleDismissProduct}
-          />
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <div className="w-8 h-8 border-2 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-gray-600">Loading products...</p>
+              </div>
+            </div>
+          ) : products.length > 0 ? (
+            <SwipeDeck
+              products={products}
+              onProductTap={handleProductTap}
+              onAddToCart={handleAddToCart}
+              onAddToWishlist={handleAddToWishlist}
+              onAppreciateArtist={handleAppreciateArtist}
+              onDismissProduct={handleDismissProduct}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <p className="text-gray-600 text-lg mb-4">No products available</p>
+                <p className="text-gray-500 text-sm">Check back later for new items</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

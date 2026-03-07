@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, Square, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +22,13 @@ declare global {
 export default function VoiceStoryRecorder({ onTranscriptUpdate, onAiResponse, isProcessing = false }: VoiceStoryRecorderProps) {
   const [isListening, setIsListening] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const isListeningRef = useRef(false);
+  const recognitionRef = useRef<any>(null);
+
+  const setListeningState = (state: boolean) => {
+    setIsListening(state);
+    isListeningRef.current = state;
+  };
 
   const { activeLanguage } = useAssistantContext();
   const { toast } = useToast();
@@ -46,10 +53,27 @@ export default function VoiceStoryRecorder({ onTranscriptUpdate, onAiResponse, i
     onTranscriptUpdate(transcript);
   };
 
+  const startRecording = () => {
+    if (!recognitionRef.current) return;
+    setListeningState(true);
+    try {
+      recognitionRef.current.start();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const stopRecording = () => {
+    if (!recognitionRef.current) return;
+    setListeningState(false);
+    recognitionRef.current.stop();
+  };
+
   const toggleListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser.");
       toast({
         variant: 'destructive',
         title: 'Not Supported',
@@ -58,16 +82,14 @@ export default function VoiceStoryRecorder({ onTranscriptUpdate, onAiResponse, i
       return;
     }
 
-    if (isListening) {
-      // Note: 'continuous=false' stops smoothly on its own, 
-      // but if the user clicks again, we just toggle the state off.
-      setIsListening(false);
-      return;
+    if (!recognitionRef.current) {
+      recognitionRef.current = new SpeechRecognition();
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    const recognition = recognitionRef.current;
+
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.lang = getLangCode(activeLanguage || 'en');
 
     recognition.onstart = () => {
@@ -75,7 +97,6 @@ export default function VoiceStoryRecorder({ onTranscriptUpdate, onAiResponse, i
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
-      setIsListening(true);
       toast({
         title: '🎤 Listening...',
         description: 'Speak now.',
@@ -83,33 +104,48 @@ export default function VoiceStoryRecorder({ onTranscriptUpdate, onAiResponse, i
     };
 
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      processTranscript(transcript);
+      let finalTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript + ' ';
+        }
+      }
+      if (finalTranscript.trim()) {
+        processTranscript(finalTranscript.trim());
+      }
     };
 
     recognition.onerror = (event: any) => {
-      if (event.error === 'no-speech') {
-        console.warn('Speech recognition warning:', event.error);
-      } else {
-        console.error('Speech recognition error:', event.error);
-        toast({
-          variant: 'destructive',
-          title: 'Microphone Error',
-          description: `Error: ${event.error}`,
-        });
+      console.warn("Speech recognition error:", event.error);
+
+      if (event.error === "network") {
+        console.warn("Speech service unavailable. Stopping recognition.");
+        recognition.stop();
+        setListeningState(false);
       }
-      setIsListening(false);
+
+      if (event.error === "not-allowed") {
+        alert("Microphone permission denied.");
+        setListeningState(false);
+      }
     };
 
     recognition.onend = () => {
-      setIsListening(false);
+      if (isListeningRef.current) {
+        setTimeout(() => {
+          try {
+            recognition.start();
+          } catch (e) {
+            console.error("Error restarting recognition:", e);
+          }
+        }, 500);
+      }
     };
 
-    try {
-      recognition.start();
-    } catch (e) {
-      console.error(e);
-      setIsListening(false);
+    if (isListening) {
+      stopRecording();
+    } else {
+      startRecording();
     }
   };
 

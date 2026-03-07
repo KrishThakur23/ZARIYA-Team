@@ -25,9 +25,15 @@ export default function VoiceAssistant() {
   const isMobile = useIsMobile();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const isSpeakingRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+
+  const setIsSpeakingState = (state: boolean) => {
+    setIsSpeaking(state);
+    isSpeakingRef.current = state;
+  };
 
   // Effect to handle user interaction for autoplay
   useEffect(() => {
@@ -66,7 +72,7 @@ export default function VoiceAssistant() {
     }
     const currentAudioRef = audioRef.current;
 
-    const onEnded = () => setIsSpeaking(false);
+    const onEnded = () => setIsSpeakingState(false);
     const onPause = () => {
       // If audio was paused by browser (e.g., due to camera access), try to resume
       if (isSpeaking && currentAudioRef.currentTime > 0 && currentAudioRef.duration > currentAudioRef.currentTime) {
@@ -98,11 +104,11 @@ export default function VoiceAssistant() {
 
     const speakWithPolly = async (text: string) => {
       try {
-        if (isSpeaking) {
+        if (isSpeakingRef.current) {
           console.log('Voice Assistant - Already speaking, skipping');
           return;
         }
-        setIsSpeaking(true);
+        setIsSpeakingState(true);
 
         const response = await fetch('/api/tts', {
           method: 'POST',
@@ -126,12 +132,12 @@ export default function VoiceAssistant() {
           audioRef.current.src = url;
           audioRef.current.onended = () => {
             console.log("Speech finished");
-            setIsSpeaking(false);
+            setIsSpeakingState(false);
             URL.revokeObjectURL(url);
           };
           audioRef.current.onerror = (e) => {
             console.error("Speech error", e);
-            setIsSpeaking(false);
+            setIsSpeakingState(false);
             URL.revokeObjectURL(url);
           };
           await audioRef.current.play();
@@ -139,19 +145,19 @@ export default function VoiceAssistant() {
           const audio = new Audio(url);
           audio.onended = () => {
             console.log("Speech finished");
-            setIsSpeaking(false);
+            setIsSpeakingState(false);
             URL.revokeObjectURL(url);
           };
           audio.onerror = (e) => {
             console.error("Speech error", e);
-            setIsSpeaking(false);
+            setIsSpeakingState(false);
             URL.revokeObjectURL(url);
           };
           await audio.play();
         }
       } catch (err) {
         console.error('Text-to-Speech Error:', err);
-        setIsSpeaking(false);
+        setIsSpeakingState(false);
       }
     };
 
@@ -170,7 +176,7 @@ export default function VoiceAssistant() {
       if (audioRef.current) {
         audioRef.current.pause();
       }
-      setIsSpeaking(false);
+      setIsSpeakingState(false);
     }
   }
 

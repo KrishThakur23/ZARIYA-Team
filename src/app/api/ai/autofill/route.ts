@@ -142,9 +142,9 @@ Strictly follow this schema:
 
         // clean markdown from JSON
         let jsonStr = aiText;
-        const jsonMatch = aiText.match(/```json\s*(\{[\s\S]*?\})\s*```/);
+        const jsonMatch = aiText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
-            jsonStr = jsonMatch[1];
+            jsonStr = jsonMatch[0];
         } else {
             jsonStr = jsonStr.replace(/```json/g, "").replace(/```/g, "").trim();
         }

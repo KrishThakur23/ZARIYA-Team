@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, GetCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, GetCommand, ScanCommand, DeleteCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 const region = process.env.AWS_REGION;
 const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
@@ -20,6 +20,9 @@ const client = new DynamoDBClient({
 const docClient = DynamoDBDocumentClient.from(client);
 
 const TABLE_NAME = process.env.DDB_TABLE;
+const FAVORITES_TABLE = process.env.DDB_FAVORITES_TABLE || 'Favorites';
+const NOTIFICATIONS_TABLE = process.env.DDB_NOTIFICATIONS_TABLE || 'Notifications';
+
 if (!TABLE_NAME) {
     throw new Error("DDB_TABLE environment variable not configured properly.");
 }
@@ -94,9 +97,10 @@ export async function listProducts(): Promise<Product[]> {
     const command = new ScanCommand({
         TableName: TABLE_NAME,
         Limit: 20,
-        ProjectionExpression: "productId, title, price, originalImage, category, createdAt, imageKey, #s",
+        ProjectionExpression: "productId, title, price, originalImage, category, createdAt, imageKey, #s, artisan, #loc, description, story",
         ExpressionAttributeNames: {
-            "#s": "status"
+            "#s": "status",
+            "#loc": "location"
         }
     });
 
@@ -111,5 +115,96 @@ export async function listProducts(): Promise<Product[]> {
             console.error("Check IAM permissions for the following actions: dynamodb:Scan");
         }
         throw new Error('Could not list products');
+    }
+}
+
+// Favorites Functions
+export interface Favorite {
+    userId: string;
+    productId: string;
+    addedAt: string;
+    [key: string]: any;
+}
+
+export async function saveFavorite(favorite: Favorite): Promise<void> {
+    const command = new PutCommand({
+        TableName: FAVORITES_TABLE,
+        Item: favorite,
+    });
+    try {
+        await docClient.send(command);
+    } catch (error: any) {
+        console.error("AWS error:", error);
+        throw new Error('Could not save favorite');
+    }
+}
+
+export async function removeFavorite(userId: string, productId: string): Promise<void> {
+    const command = new DeleteCommand({
+        TableName: FAVORITES_TABLE,
+        Key: { userId, productId },
+    });
+    try {
+        await docClient.send(command);
+    } catch (error: any) {
+        console.error("AWS error:", error);
+        throw new Error('Could not remove favorite');
+    }
+}
+
+export async function listUserFavorites(userId: string): Promise<Favorite[]> {
+    const command = new QueryCommand({
+        TableName: FAVORITES_TABLE,
+        KeyConditionExpression: "userId = :userId",
+        ExpressionAttributeValues: {
+            ":userId": userId,
+        },
+    });
+    try {
+        const response = await docClient.send(command);
+        return (response.Items as Favorite[]) || [];
+    } catch (error: any) {
+        console.error("AWS error:", error);
+        throw new Error('Could not list favorites');
+    }
+}
+
+// Notification Functions
+export interface Notification {
+    userId: string;
+    notificationId: string;
+    title: string;
+    message: string;
+    isRead: boolean;
+    createdAt: string;
+}
+
+export async function saveNotification(notification: Notification): Promise<void> {
+    const command = new PutCommand({
+        TableName: NOTIFICATIONS_TABLE,
+        Item: notification,
+    });
+    try {
+        await docClient.send(command);
+    } catch (error: any) {
+        console.error("AWS error:", error);
+        throw new Error('Could not save notification');
+    }
+}
+
+export async function listUserNotifications(userId: string): Promise<Notification[]> {
+    const command = new QueryCommand({
+        TableName: NOTIFICATIONS_TABLE,
+        KeyConditionExpression: "userId = :userId",
+        ExpressionAttributeValues: {
+            ":userId": userId,
+        },
+    });
+    try {
+        const response = await docClient.send(command);
+        return (response.Items as Notification[]) || [];
+    } catch (error: any) {
+        console.error("AWS error:", error);
+        throw new Error('Could not list notifications');
     }
 }

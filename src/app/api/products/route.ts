@@ -28,14 +28,15 @@ export async function GET() {
             return item;
         });
 
-        // Sort by newest first
+        // Sort by newest first and limit to 20 items
         mappedProducts.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        const limitedProducts = mappedProducts.slice(0, 20);
 
-        cachedProducts = mappedProducts;
+        cachedProducts = limitedProducts;
         lastFetch = Date.now();
 
         console.timeEnd("DynamoDB fetch");
-        return NextResponse.json({ products: mappedProducts });
+        return NextResponse.json({ products: limitedProducts });
     } catch (error) {
         console.error(error);
         console.timeEnd("DynamoDB fetch");

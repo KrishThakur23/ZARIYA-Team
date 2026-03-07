@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Share2, Star, CheckCircle, Truck, MapPin, Clock, ShoppingCart, Plus, Minus, Volume2, Square } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
+import { cart } from '@/lib/cart';
 
 interface Product {
   id: string;
@@ -63,18 +64,16 @@ export default function ProductDetail({ product, onBack, onAddToCart, onAddToWis
 
   const handleAddToCart = () => {
     try {
-      const cart = JSON.parse(localStorage.getItem('zariya_cart') || '[]');
-      const exists = cart.find((p: any) => p.id === product.id);
-
-      if (!exists) {
-        cart.push({ ...product, quantity: quantity });
-        localStorage.setItem('zariya_cart', JSON.stringify(cart));
-        toast({ title: 'Added to Cart!', description: `${product.title} added to cart`, duration: 2000 });
-        onAddToCart?.({ ...product, ...{ quantity } } as any);
-      } else {
-        toast({ title: 'Already in cart', description: 'Item quantity updated', duration: 2000 });
-        // Optional: Update quantity if exists
-      }
+      cart.addItem({
+        productId: product.id,
+        title: product.title,
+        price: product.price,
+        image: galleryImages[0] || product.image,
+        artisan: product.artisan,
+        quantity: quantity,
+      });
+      toast({ title: 'Added to Cart!', description: `${product.title} added to cart`, duration: 2000 });
+      onAddToCart?.({ ...product, ...{ quantity } } as any);
     } catch (e) {
       console.error(e);
     }
@@ -154,7 +153,7 @@ export default function ProductDetail({ product, onBack, onAddToCart, onAddToWis
 
   return (
     <motion.div
-      className="fixed inset-0 bg-white z-50 overflow-hidden"
+      className="min-h-screen bg-white z-50 overflow-y-auto pb-32"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -162,7 +161,7 @@ export default function ProductDetail({ product, onBack, onAddToCart, onAddToWis
     >
       {/* Header */}
       <motion.div
-        className="absolute top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100"
+        className="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100"
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ delay: 0.1, duration: 0.4 }}
@@ -200,8 +199,8 @@ export default function ProductDetail({ product, onBack, onAddToCart, onAddToWis
       </motion.div>
 
       {/* Main Content */}
-      <div className="pt-20 pb-24 overflow-y-auto">
-        <div className="max-w-6xl mx-auto">
+      <div className="pt-20">
+        <div className="max-w-6xl mx-auto px-4 pb-32">
           {/* Desktop Layout */}
           <div className="hidden md:grid md:grid-cols-2 md:gap-12 md:p-8">
             {/* Left Column - Image Gallery */}
@@ -445,6 +444,25 @@ export default function ProductDetail({ product, onBack, onAddToCart, onAddToWis
                   ))}
                 </div>
               </div>
+
+              {/* Specific Product Info Section */}
+              <section className="mt-8 space-y-6 pt-8 border-t border-gray-100">
+                <div>
+                  <h2 className="text-xl font-semibold font-serif mb-2">Story Behind the Craft</h2>
+                  <p className="text-gray-700 leading-relaxed text-sm">{enhancedProduct.story}</p>
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-semibold font-serif mb-2">Materials</h2>
+                  <p className="text-gray-700 text-sm">{enhancedProduct.specifications.material}</p>
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-semibold font-serif mb-2">Dimensions</h2>
+                  <p className="text-gray-700 text-sm">{enhancedProduct.specifications.dimensions}</p>
+                </div>
+              </section>
+
             </motion.div>
           </div>
 
@@ -626,6 +644,25 @@ export default function ProductDetail({ product, onBack, onAddToCart, onAddToWis
                   ))}
                 </div>
               </div>
+
+              {/* Specific Product Info Section */}
+              <section className="mt-8 space-y-6 pt-8 border-t border-gray-100">
+                <div>
+                  <h2 className="text-xl font-semibold font-serif mb-2">Story Behind the Craft</h2>
+                  <p className="text-gray-700 leading-relaxed text-sm">{enhancedProduct.story}</p>
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-semibold font-serif mb-2">Materials</h2>
+                  <p className="text-gray-700 text-sm">{enhancedProduct.specifications.material}</p>
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-semibold font-serif mb-2">Dimensions</h2>
+                  <p className="text-gray-700 text-sm">{enhancedProduct.specifications.dimensions}</p>
+                </div>
+              </section>
+
             </motion.div>
           </div>
         </div>
@@ -633,7 +670,7 @@ export default function ProductDetail({ product, onBack, onAddToCart, onAddToWis
 
       {/* Sticky Bottom Actions */}
       <motion.div
-        className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4"
+        className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50 p-4"
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ delay: 0.4, duration: 0.4 }}

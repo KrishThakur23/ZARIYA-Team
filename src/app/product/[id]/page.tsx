@@ -4,40 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import ProductDetail from '@/components/buyer/ProductDetail';
 
-// Mock data as fallback
-const mockProducts = [
-    {
-        id: 'trending-1',
-        title: 'Ornate Porcelain Teapot - Floral Gold',
-        artisan: 'Priya Sharma',
-        price: 89.00,
-        image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=500&fit=crop&crop=center',
-        description: 'Hand-painted porcelain with intricate gold floral motifs',
-        location: 'Jaipur, India',
-        category: 'Ceramic Art',
-        rating: 4.9,
-    },
-    {
-        id: 'trending-2',
-        title: 'Hand-Carved Rosewood Buddha Statue',
-        artisan: 'Rajesh Kumar',
-        price: 156.00,
-        image: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=500&fit=crop&crop=center',
-        rating: 4.8,
-        location: 'Varanasi, India',
-        description: 'Sacred rosewood carving with traditional craftsmanship'
-    },
-    {
-        id: 'trending-3',
-        title: 'Banarasi Silk Saree - Royal Blue',
-        artisan: 'Meera Patel',
-        price: 234.00,
-        image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=500&fit=crop&crop=center',
-        rating: 4.9,
-        location: 'Varanasi, India',
-        description: 'Luxurious handwoven silk with traditional patterns'
-    }
-];
+// Mock data removed - will fetch from API
 
 export default function ProductPage() {
     const params = useParams();
@@ -54,7 +21,7 @@ export default function ProductPage() {
                     if (res.ok) {
                         const data = await res.json();
                         const remoteProducts = data.products || [];
-                        const foundRemote = remoteProducts.find((p: any) => p.id === params.id);
+                        const foundRemote = remoteProducts.find((p: any) => p.id === params.id || p.productId === params.id);
 
                         if (foundRemote) {
                             // Transform remote product to match UI format if needed
@@ -85,11 +52,8 @@ export default function ProductPage() {
                     console.error("Error fetching from API", e);
                 }
 
-                // 2. Fallback to mock data
-                const foundMock = mockProducts.find(p => p.id === params.id);
-                if (foundMock) {
-                    setProduct(foundMock);
-                }
+                // 2. If not found in API, show not found
+                setProduct(null);
                 setLoading(false);
             };
 

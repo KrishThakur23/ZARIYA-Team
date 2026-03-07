@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,7 +33,7 @@ interface HomeFeedProps {
   userName?: string;
 }
 
-export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'Pashin' }: HomeFeedProps) {
+const HomeFeed = React.memo(function HomeFeed({ onProductClick, onArtisanClick, userName = 'Pashin' }: HomeFeedProps) {
   const [currentTrendingIndex, setCurrentTrendingIndex] = useState(0);
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
   const [mergedTrendingProducts, setMergedTrendingProducts] = useState<any[]>([]);
@@ -66,14 +66,10 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
           const remoteProducts = data.products || [];
 
           if (remoteProducts.length > 0) {
-            console.log('📦 Loaded from API:', remoteProducts.length, 'products');
-
             // Filter strictly for published products with valid image URLs
             const validProducts = remoteProducts.filter((p: any) =>
               p.status === 'published' && p.originalImage && typeof p.originalImage === 'string' && p.originalImage.trim() !== ''
             );
-
-            console.log('📦 Rendered valid API products:', validProducts.length);
 
             // Transform remote products to match UI format
             const transformedProducts = validProducts.map((p: any) => {
@@ -81,7 +77,7 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
               const isNew = (new Date().getTime() - pDate) < 5 * 60 * 1000;
 
               return {
-                id: p.id,
+                id: p.productId || p.id,
                 title: p.title,
                 artisan: p.artisan || 'You',
                 price: p.price || 0,
@@ -138,7 +134,15 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
         newWishlist = [...wishlist, product];
       }
 
-      localStorage.setItem('zariya_wishlist', JSON.stringify(newWishlist));
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(() => {
+          localStorage.setItem('zariya_wishlist', JSON.stringify(newWishlist));
+        });
+      } else {
+        setTimeout(() => {
+          localStorage.setItem('zariya_wishlist', JSON.stringify(newWishlist));
+        }, 0);
+      }
 
       // Update state
       setLikedProducts(prev => {
@@ -271,7 +275,7 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
           >
             {mergedTrendingProducts.map((product, index) => (
               <motion.div
-                key={product.id}
+                key={product.id || `trending-${index}`}
                 className="flex-shrink-0 w-80"
                 style={{ scrollSnapAlign: 'start' }}
                 initial={{ opacity: 0, x: 50 }}
@@ -435,7 +439,7 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
           <AnimatePresence>
             {mergedCuratedFeed.map((product, index) => (
               <motion.div
-                key={product.id}
+                key={product.id || `curated-${index}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
@@ -533,4 +537,6 @@ export default function HomeFeed({ onProductClick, onArtisanClick, userName = 'P
       </section>
     </div>
   );
-}
+});
+
+export default HomeFeed;
