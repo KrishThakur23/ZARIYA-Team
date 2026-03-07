@@ -26,6 +26,7 @@ export default function VoiceAssistant() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const isSpeakingRef = useRef(false);
+  const lastSpokenMessageRef = useRef<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -104,11 +105,16 @@ export default function VoiceAssistant() {
 
     const speakWithPolly = async (text: string) => {
       try {
+        if (text === lastSpokenMessageRef.current) {
+          return;
+        }
+
         if (isSpeakingRef.current) {
           console.log('Voice Assistant - Already speaking, skipping');
           return;
         }
         setIsSpeakingState(true);
+        lastSpokenMessageRef.current = text;
 
         const response = await fetch('/api/tts', {
           method: 'POST',

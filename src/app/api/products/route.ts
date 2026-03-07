@@ -8,7 +8,7 @@ export async function GET() {
     console.time("DynamoDB fetch");
     try {
         console.log("Route hit: /api/products (GET)");
-        console.log("AWS Region:", process.env.AWS_REGION);
+        console.log("AWS Region:", process.env.REGION);
 
         if (cachedProducts && Date.now() - lastFetch < 10000) {
             console.log("Returning cached products");
@@ -22,7 +22,7 @@ export async function GET() {
             if (item.imageKey) {
                 return {
                     ...item,
-                    originalImage: `https://${process.env.S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${item.imageKey}`
+                    originalImage: `https://${process.env.S3_BUCKET}.s3.${process.env.REGION}.amazonaws.com/${item.imageKey}`
                 };
             }
             return item;
@@ -47,7 +47,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
     try {
         console.log("Route hit: /api/products (POST)");
-        console.log("AWS Region:", process.env.AWS_REGION);
+        console.log("AWS Region:", process.env.REGION);
         const productData = await req.json();
 
         if (!productData || !productData.id) {

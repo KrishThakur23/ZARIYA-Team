@@ -1,9 +1,9 @@
 import { TranscribeClient, GetTranscriptionJobCommand } from '@aws-sdk/client-transcribe';
 import { NextResponse } from 'next/server';
 
-const region = process.env.AWS_REGION;
-const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+const region = process.env.REGION;
+const accessKeyId = process.env.ACCESS_KEY_ID;
+const secretAccessKey = process.env.SECRET_ACCESS_KEY;
 
 if (!accessKeyId || !secretAccessKey || !region) {
     throw new Error("AWS environment variables not configured properly.");
@@ -20,7 +20,7 @@ const client = new TranscribeClient({
 export async function GET(req: Request) {
     try {
         console.log("Route hit: /api/transcribe/status");
-        console.log("AWS Region:", process.env.AWS_REGION);
+        console.log("AWS Region:", process.env.REGION);
         const { searchParams } = new URL(req.url);
         const jobName = searchParams.get('jobName');
 

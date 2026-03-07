@@ -1,11 +1,12 @@
 'use client';
 
+import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { MapPin, Truck, CheckCircle2, Home, Package, ArrowLeft, MoreHorizontal } from 'lucide-react';
 
-export default function OrderTrackingPage() {
+function OrderTracker() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const orderId = searchParams.get('id') || 'ORD-982374';
@@ -89,5 +90,13 @@ export default function OrderTrackingPage() {
                 </motion.div>
             </div>
         </div>
+    );
+}
+
+export default function OrderTrackingPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading tracker...</div>}>
+            <OrderTracker />
+        </Suspense>
     );
 }

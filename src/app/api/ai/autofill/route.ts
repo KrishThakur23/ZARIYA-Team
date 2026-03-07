@@ -4,9 +4,13 @@ import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { fileTypeFromBuffer } from 'file-type';
 import sharp from 'sharp';
 
-const region = process.env.AWS_REGION || 'us-east-1';
-const bedrock = new BedrockRuntimeClient({ region: 'us-east-1' }); // Requirements explicitly set us-east-1 for Bedrock
-const s3 = new S3Client({ region });
+const region = process.env.REGION || 'us-east-1';
+const credentials = {
+    accessKeyId: process.env.ACCESS_KEY_ID!,
+    secretAccessKey: process.env.SECRET_ACCESS_KEY!
+};
+const bedrock = new BedrockRuntimeClient({ region: 'us-east-1', credentials }); // Requirements explicitly set us-east-1 for Bedrock
+const s3 = new S3Client({ region, credentials });
 
 export async function POST(req: NextRequest) {
     try {

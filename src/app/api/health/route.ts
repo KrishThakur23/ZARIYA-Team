@@ -6,11 +6,11 @@ import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedroc
 export async function GET() {
     try {
         console.log("Route hit: /api/health");
-        console.log("AWS Region:", process.env.AWS_REGION);
+        console.log("AWS Region:", process.env.REGION);
 
-        const region = process.env.AWS_REGION;
-        const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-        const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+        const region = process.env.REGION;
+        const accessKeyId = process.env.ACCESS_KEY_ID;
+        const secretAccessKey = process.env.SECRET_ACCESS_KEY;
 
         if (!accessKeyId || !secretAccessKey || !region) {
             return NextResponse.json({ error: "AWS environment variables not configured properly." }, { status: 500 });

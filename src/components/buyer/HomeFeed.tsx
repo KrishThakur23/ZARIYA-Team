@@ -293,6 +293,7 @@ const HomeFeed = React.memo(function HomeFeed({ onProductClick, onArtisanClick, 
                             fill
                             sizes="(max-width: 768px) 100vw, 33vw"
                             className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                            priority={index < 4}
                           />
                         )}
 
@@ -459,6 +460,7 @@ const HomeFeed = React.memo(function HomeFeed({ onProductClick, onArtisanClick, 
                             fill
                             sizes="(max-width: 768px) 100vw, 33vw"
                             className="object-cover group-hover:scale-110 transition-transform duration-500"
+                            priority={index < 4}
                           />
                         )}
 
