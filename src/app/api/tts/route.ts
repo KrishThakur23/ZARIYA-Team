@@ -1,21 +1,28 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { PollyClient, SynthesizeSpeechCommand, OutputFormat, Engine, VoiceId } from '@aws-sdk/client-polly';
 import { NextRequest, NextResponse } from 'next/server';
 
-const region = process.env.REGION;
-const accessKeyId = process.env.ACCESS_KEY_ID;
-const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+let _pollyClient: PollyClient | null = null;
 
-if (!accessKeyId || !secretAccessKey || !region) {
-    throw new Error("AWS environment variables not configured properly.");
+function getPollyClient(): PollyClient {
+    if (!_pollyClient) {
+        const region = process.env.REGION;
+        const accessKeyId = process.env.ACCESS_KEY_ID;
+        const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+
+        if (!accessKeyId || !secretAccessKey || !region) {
+            throw new Error("AWS environment variables not configured properly.");
+        }
+
+        _pollyClient = new PollyClient({
+            region,
+            credentials: { accessKeyId, secretAccessKey },
+        });
+    }
+    return _pollyClient;
 }
-
-const client = new PollyClient({
-    region,
-    credentials: {
-        accessKeyId,
-        secretAccessKey,
-    },
-});
 
 export async function POST(req: NextRequest) {
     try {
@@ -32,7 +39,7 @@ export async function POST(req: NextRequest) {
             Engine: "standard",
         });
 
-        const response = await client.send(command);
+        const response = await getPollyClient().send(command);
 
         if (response.AudioStream) {
             // Return the raw audio buffer directly to be read via response.blob() on the client

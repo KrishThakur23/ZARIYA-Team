@@ -1,22 +1,29 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { NextRequest, NextResponse } from 'next/server';
 
-const region = process.env.REGION;
-const accessKeyId = process.env.ACCESS_KEY_ID;
-const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+let _s3Client: S3Client | null = null;
 
-if (!accessKeyId || !secretAccessKey || !region) {
-  throw new Error("AWS environment variables not configured properly.");
+function getS3Client(): S3Client {
+  if (!_s3Client) {
+    const region = process.env.REGION;
+    const accessKeyId = process.env.ACCESS_KEY_ID;
+    const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+
+    if (!accessKeyId || !secretAccessKey || !region) {
+      throw new Error("AWS environment variables not configured properly.");
+    }
+
+    _s3Client = new S3Client({
+      region,
+      credentials: { accessKeyId, secretAccessKey },
+    });
+  }
+  return _s3Client;
 }
-
-const s3Client = new S3Client({
-  region,
-  credentials: {
-    accessKeyId,
-    secretAccessKey,
-  },
-});
 
 export async function POST(req: NextRequest) {
   try {
@@ -49,7 +56,7 @@ export async function POST(req: NextRequest) {
     });
 
     console.log("Calling AWS service: S3 (generate presigned URL)");
-    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    const uploadUrl = await getSignedUrl(getS3Client(), command, { expiresIn: 3600 });
     console.log("AWS call success. Generated URL length:", uploadUrl.length);
 
     return NextResponse.json({ uploadUrl, objectKey });

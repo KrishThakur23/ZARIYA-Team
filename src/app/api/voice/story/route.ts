@@ -1,22 +1,29 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 
-const region = process.env.REGION;
-const accessKeyId = process.env.ACCESS_KEY_ID;
-const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+let _bedrockClient: BedrockRuntimeClient | null = null;
 
-if (!accessKeyId || !secretAccessKey || !region) {
-  throw new Error("AWS environment variables not configured properly.");
+function getBedrockClient(): BedrockRuntimeClient {
+  if (!_bedrockClient) {
+    const region = process.env.REGION;
+    const accessKeyId = process.env.ACCESS_KEY_ID;
+    const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+
+    if (!accessKeyId || !secretAccessKey || !region) {
+      throw new Error("AWS environment variables not configured properly.");
+    }
+
+    _bedrockClient = new BedrockRuntimeClient({
+      region,
+      credentials: { accessKeyId, secretAccessKey },
+    });
+  }
+  return _bedrockClient;
 }
-
-const client = new BedrockRuntimeClient({
-  region,
-  credentials: {
-    accessKeyId,
-    secretAccessKey,
-  },
-});
 
 
 const StoryRequestSchema = z.object({
@@ -61,7 +68,7 @@ Format as JSON with keys: "craft_story" (string), "short_description" (string)`;
     let parsedResponse;
     try {
       console.log("Calling AWS service: Bedrock (Generate Story)");
-      const response = await client.send(command);
+      const response = await getBedrockClient().send(command);
       console.log("AWS call success");
 
       const resultString = new TextDecoder().decode(response.body);

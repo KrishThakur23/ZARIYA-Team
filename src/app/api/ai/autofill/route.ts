@@ -1,16 +1,36 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from 'next/server';
 import { BedrockRuntimeClient, ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { fileTypeFromBuffer } from 'file-type';
 import sharp from 'sharp';
 
-const region = process.env.REGION || 'us-east-1';
-const credentials = {
-    accessKeyId: process.env.ACCESS_KEY_ID!,
-    secretAccessKey: process.env.SECRET_ACCESS_KEY!
-};
-const bedrock = new BedrockRuntimeClient({ region: 'us-east-1', credentials }); // Requirements explicitly set us-east-1 for Bedrock
-const s3 = new S3Client({ region, credentials });
+let _bedrock: BedrockRuntimeClient | null = null;
+let _s3: S3Client | null = null;
+
+function getCredentials() {
+    return {
+        accessKeyId: process.env.ACCESS_KEY_ID!,
+        secretAccessKey: process.env.SECRET_ACCESS_KEY!
+    };
+}
+
+function getBedrock(): BedrockRuntimeClient {
+    if (!_bedrock) {
+        _bedrock = new BedrockRuntimeClient({ region: 'us-east-1', credentials: getCredentials() });
+    }
+    return _bedrock;
+}
+
+function getS3(): S3Client {
+    if (!_s3) {
+        const region = process.env.REGION || 'us-east-1';
+        _s3 = new S3Client({ region, credentials: getCredentials() });
+    }
+    return _s3;
+}
 
 export async function POST(req: NextRequest) {
     try {
@@ -28,7 +48,7 @@ export async function POST(req: NextRequest) {
             Bucket: bucket,
             Key: imageKey,
         };
-        const s3Response = await s3.send(new GetObjectCommand(getObjectParams));
+        const s3Response = await getS3().send(new GetObjectCommand(getObjectParams));
 
         if (!s3Response.Body) {
             throw new Error("S3 Body is empty");
@@ -135,7 +155,7 @@ Strictly follow this schema:
             ]
         });
 
-        const bedrockResponse = await bedrock.send(command);
+        const bedrockResponse = await getBedrock().send(command);
 
         let aiText = bedrockResponse.output?.message?.content?.[0]?.text || "";
         console.log(`[Autofill] Raw Bedrock response:`, aiText);

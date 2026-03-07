@@ -1,3 +1,6 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from 'next/server';
 import { S3Client, HeadBucketCommand } from '@aws-sdk/client-s3';
 import { DynamoDBClient, DescribeTableCommand } from '@aws-sdk/client-dynamodb';

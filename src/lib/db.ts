@@ -1,31 +1,40 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, GetCommand, ScanCommand, DeleteCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
-const region = process.env.REGION;
-const accessKeyId = process.env.ACCESS_KEY_ID;
-const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+// Lazy-initialized DynamoDB client to prevent module-load crashes in Amplify
+let _docClient: DynamoDBDocumentClient | null = null;
 
-if (!accessKeyId || !secretAccessKey || !region) {
-    throw new Error("AWS environment variables not configured properly.");
+function getDocClient(): DynamoDBDocumentClient {
+    if (!_docClient) {
+        const region = process.env.REGION;
+        const accessKeyId = process.env.ACCESS_KEY_ID;
+        const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+
+        if (!accessKeyId || !secretAccessKey || !region) {
+            throw new Error("AWS environment variables not configured properly.");
+        }
+
+        const client = new DynamoDBClient({
+            region,
+            credentials: {
+                accessKeyId,
+                secretAccessKey,
+            },
+        });
+
+        _docClient = DynamoDBDocumentClient.from(client);
+    }
+    return _docClient;
 }
 
-const client = new DynamoDBClient({
-    region,
-    credentials: {
-        accessKeyId,
-        secretAccessKey,
-    },
-});
+function getTableName(): string {
+    const name = process.env.DDB_TABLE;
+    if (!name) throw new Error("DDB_TABLE environment variable not configured.");
+    return name;
+}
 
-const docClient = DynamoDBDocumentClient.from(client);
-
-const TABLE_NAME = process.env.DDB_TABLE;
 const FAVORITES_TABLE = process.env.DDB_FAVORITES_TABLE || 'Favorites';
 const NOTIFICATIONS_TABLE = process.env.DDB_NOTIFICATIONS_TABLE || 'Notifications';
-
-if (!TABLE_NAME) {
-    throw new Error("DDB_TABLE environment variable not configured properly.");
-}
 
 // Define the product type here (mirroring frontend expectations)
 export interface Product {
@@ -54,13 +63,13 @@ export async function saveProduct(product: Product): Promise<void> {
     };
 
     const command = new PutCommand({
-        TableName: TABLE_NAME,
+        TableName: getTableName(),
         Item: mappedProduct,
     });
 
     try {
         console.log("Calling AWS service: DynamoDB (PutItem)");
-        await docClient.send(command);
+        await getDocClient().send(command);
         console.log("AWS call success");
     } catch (error: any) {
         console.error("AWS error:", error);
@@ -73,7 +82,7 @@ export async function saveProduct(product: Product): Promise<void> {
 
 export async function getProduct(productId: string): Promise<Product | null> {
     const command = new GetCommand({
-        TableName: TABLE_NAME,
+        TableName: getTableName(),
         Key: {
             productId,
         },
@@ -81,7 +90,7 @@ export async function getProduct(productId: string): Promise<Product | null> {
 
     try {
         console.log("Calling AWS service: DynamoDB (GetItem)");
-        const response = await docClient.send(command);
+        const response = await getDocClient().send(command);
         console.log("AWS call success");
         return (response.Item as Product) || null;
     } catch (error: any) {
@@ -95,7 +104,7 @@ export async function getProduct(productId: string): Promise<Product | null> {
 
 export async function listProducts(): Promise<Product[]> {
     const command = new ScanCommand({
-        TableName: TABLE_NAME,
+        TableName: getTableName(),
         Limit: 20,
         ProjectionExpression: "productId, title, price, originalImage, category, createdAt, imageKey, #s, artisan, #loc, description, story",
         ExpressionAttributeNames: {
@@ -106,7 +115,7 @@ export async function listProducts(): Promise<Product[]> {
 
     try {
         console.log("Calling AWS service: DynamoDB (Scan)");
-        const response = await docClient.send(command);
+        const response = await getDocClient().send(command);
         console.log("AWS call success");
         return (response.Items as Product[]) || [];
     } catch (error: any) {
@@ -132,7 +141,7 @@ export async function saveFavorite(favorite: Favorite): Promise<void> {
         Item: favorite,
     });
     try {
-        await docClient.send(command);
+        await getDocClient().send(command);
     } catch (error: any) {
         console.error("AWS error:", error);
         throw new Error('Could not save favorite');
@@ -145,7 +154,7 @@ export async function removeFavorite(userId: string, productId: string): Promise
         Key: { userId, productId },
     });
     try {
-        await docClient.send(command);
+        await getDocClient().send(command);
     } catch (error: any) {
         console.error("AWS error:", error);
         throw new Error('Could not remove favorite');
@@ -161,7 +170,7 @@ export async function listUserFavorites(userId: string): Promise<Favorite[]> {
         },
     });
     try {
-        const response = await docClient.send(command);
+        const response = await getDocClient().send(command);
         return (response.Items as Favorite[]) || [];
     } catch (error: any) {
         console.error("AWS error:", error);
@@ -185,7 +194,7 @@ export async function saveNotification(notification: Notification): Promise<void
         Item: notification,
     });
     try {
-        await docClient.send(command);
+        await getDocClient().send(command);
     } catch (error: any) {
         console.error("AWS error:", error);
         throw new Error('Could not save notification');
@@ -201,7 +210,7 @@ export async function listUserNotifications(userId: string): Promise<Notificatio
         },
     });
     try {
-        const response = await docClient.send(command);
+        const response = await getDocClient().send(command);
         return (response.Items as Notification[]) || [];
     } catch (error: any) {
         console.error("AWS error:", error);

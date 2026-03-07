@@ -1,14 +1,24 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from 'next/server';
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 
-const region = process.env.REGION!;
-const accessKeyId = process.env.ACCESS_KEY_ID!;
-const secretAccessKey = process.env.SECRET_ACCESS_KEY!;
+let _bedrockClient: BedrockRuntimeClient | null = null;
 
-const client = new BedrockRuntimeClient({
-    region,
-    credentials: { accessKeyId, secretAccessKey },
-});
+function getBedrockClient(): BedrockRuntimeClient {
+    if (!_bedrockClient) {
+        const region = process.env.REGION!;
+        const accessKeyId = process.env.ACCESS_KEY_ID!;
+        const secretAccessKey = process.env.SECRET_ACCESS_KEY!;
+
+        _bedrockClient = new BedrockRuntimeClient({
+            region,
+            credentials: { accessKeyId, secretAccessKey },
+        });
+    }
+    return _bedrockClient;
+}
 
 export async function POST(req: NextRequest) {
     try {
@@ -45,7 +55,7 @@ export async function POST(req: NextRequest) {
             body: JSON.stringify(payload),
         });
 
-        const response = await client.send(command);
+        const response = await getBedrockClient().send(command);
         const decoded = new TextDecoder().decode(response.body);
         const result = JSON.parse(decoded);
 

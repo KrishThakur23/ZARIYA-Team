@@ -1,21 +1,28 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { TranscribeClient, GetTranscriptionJobCommand } from '@aws-sdk/client-transcribe';
 import { NextResponse } from 'next/server';
 
-const region = process.env.REGION;
-const accessKeyId = process.env.ACCESS_KEY_ID;
-const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+let _transcribeClient: TranscribeClient | null = null;
 
-if (!accessKeyId || !secretAccessKey || !region) {
-    throw new Error("AWS environment variables not configured properly.");
+function getTranscribeClient(): TranscribeClient {
+    if (!_transcribeClient) {
+        const region = process.env.REGION;
+        const accessKeyId = process.env.ACCESS_KEY_ID;
+        const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+
+        if (!accessKeyId || !secretAccessKey || !region) {
+            throw new Error("AWS environment variables not configured properly.");
+        }
+
+        _transcribeClient = new TranscribeClient({
+            region,
+            credentials: { accessKeyId, secretAccessKey },
+        });
+    }
+    return _transcribeClient;
 }
-
-const client = new TranscribeClient({
-    region,
-    credentials: {
-        accessKeyId,
-        secretAccessKey,
-    },
-});
 
 export async function GET(req: Request) {
     try {
@@ -33,7 +40,7 @@ export async function GET(req: Request) {
         });
 
         console.log("Calling AWS service: Transcribe (GetTranscriptionJob)");
-        const response = await client.send(command);
+        const response = await getTranscribeClient().send(command);
         console.log("AWS call success");
         const status = response.TranscriptionJob?.TranscriptionJobStatus;
 
