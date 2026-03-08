@@ -5,30 +5,34 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, GetCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 
-const region = process.env.REGION;
-const accessKeyId = process.env.ACCESS_KEY_ID;
-const secretAccessKey = process.env.SECRET_ACCESS_KEY;
-
-if (!accessKeyId || !secretAccessKey || !region) {
-    console.error("AWS environment variables not configured properly.");
-}
-
-let client: DynamoDBClient | null = null;
 let docClient: DynamoDBDocumentClient | null = null;
 
-// Initialize DynamoDB clients only if AWS credentials are available
-if (accessKeyId && secretAccessKey && region) {
-    client = new DynamoDBClient({
-        region,
-        credentials: {
-            accessKeyId,
-            secretAccessKey,
-        },
-    });
-    docClient = DynamoDBDocumentClient.from(client);
+function getDocClient(): DynamoDBDocumentClient | null {
+    if (!docClient) {
+        const region = process.env.REGION;
+        const accessKeyId = process.env.ACCESS_KEY_ID;
+        const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+
+        if (!accessKeyId || !secretAccessKey || !region) {
+            console.error("AWS environment variables not configured properly.");
+            return null;
+        }
+
+        const client = new DynamoDBClient({
+            region,
+            credentials: {
+                accessKeyId,
+                secretAccessKey,
+            },
+        });
+        docClient = DynamoDBDocumentClient.from(client);
+    }
+    return docClient;
 }
 
-const ARTISANS_TABLE = process.env.DDB_ARTISANS_TABLE || 'Artisans';
+function getArtisansTableName(): string {
+    return process.env.DDB_ARTISANS_TABLE || 'Artisans';
+}
 
 export interface ArtisanProfile {
     artisanId: string;
@@ -59,13 +63,14 @@ export async function POST(req: NextRequest) {
         };
 
         // If DynamoDB is configured, save to database
-        if (docClient) {
+        const client = getDocClient();
+        if (client) {
             const command = new PutCommand({
-                TableName: ARTISANS_TABLE,
+                TableName: getArtisansTableName(),
                 Item: artisanProfile,
             });
 
-            await docClient.send(command);
+            await client.send(command);
             console.log("Artisan profile saved to DynamoDB");
         } else {
             console.log("DynamoDB not configured, artisan profile created locally");
@@ -77,11 +82,8 @@ export async function POST(req: NextRequest) {
         });
 
     } catch (error: any) {
-        console.error("Error creating artisan profile:", error);
-        return NextResponse.json({
-            error: "Failed to create artisan profile",
-            details: error.message
-        }, { status: 500 });
+        console.error("API error:", error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
 
@@ -90,18 +92,19 @@ export async function GET(req: NextRequest) {
         const { searchParams } = new URL(req.url);
         const artisanId = searchParams.get('id');
 
+        const client = getDocClient();
         if (artisanId) {
             // Get specific artisan
-            if (!docClient) {
+            if (!client) {
                 return NextResponse.json({ error: "Database not configured" }, { status: 500 });
             }
 
             const command = new GetCommand({
-                TableName: ARTISANS_TABLE,
+                TableName: getArtisansTableName(),
                 Key: { artisanId },
             });
 
-            const response = await docClient.send(command);
+            const response = await client.send(command);
 
             if (!response.Item) {
                 return NextResponse.json({ error: "Artisan not found" }, { status: 404 });
@@ -110,24 +113,21 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ artisan: response.Item });
         } else {
             // List all artisans
-            if (!docClient) {
+            if (!client) {
                 return NextResponse.json({ artisans: [] });
             }
 
             const command = new ScanCommand({
-                TableName: ARTISANS_TABLE,
+                TableName: getArtisansTableName(),
                 Limit: 20,
             });
 
-            const response = await docClient.send(command);
+            const response = await client.send(command);
             return NextResponse.json({ artisans: response.Items || [] });
         }
 
     } catch (error: any) {
-        console.error("Error fetching artisan(s):", error);
-        return NextResponse.json({
-            error: "Failed to fetch artisan data",
-            details: error.message
-        }, { status: 500 });
+        console.error("API error:", error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

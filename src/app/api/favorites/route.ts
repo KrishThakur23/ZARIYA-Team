@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
         const favorites = await listUserFavorites(userId);
         return NextResponse.json({ favorites });
     } catch (error: any) {
-        console.error("Error fetching favorites:", error);
+        console.error("API error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
         await saveFavorite(favorite);
         return NextResponse.json({ success: true, favorite });
     } catch (error: any) {
-        console.error("Error saving favorite:", error);
+        console.error("API error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
@@ -56,7 +56,7 @@ export async function DELETE(req: NextRequest) {
         await removeFavorite(userId, productId);
         return NextResponse.json({ success: true });
     } catch (error: any) {
-        console.error("Error deleting favorite:", error);
+        console.error("API error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

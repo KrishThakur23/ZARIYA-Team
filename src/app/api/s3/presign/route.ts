@@ -61,10 +61,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ uploadUrl, objectKey });
   } catch (error: any) {
-    console.error("AWS error:", error);
-    if (error.name === 'AccessDeniedException') {
-      console.error("Check IAM permissions for the following actions: s3:PutObject");
-    }
+    console.error("API error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

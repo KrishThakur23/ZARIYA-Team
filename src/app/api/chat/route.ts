@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ reply });
 
     } catch (error: any) {
-        console.error("Titan error:", error.name, error.message);
-        return NextResponse.json({ error: "Chat failed", details: error.message }, { status: 500 });
+        console.error("API error:", error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

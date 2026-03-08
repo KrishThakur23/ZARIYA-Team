@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
         const notifications = await listUserNotifications(userId);
         return NextResponse.json({ notifications });
     } catch (error: any) {
-        console.error("Error fetching notifications:", error);
+        console.error("API error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
         await saveNotification(notification);
         return NextResponse.json({ success: true, notification });
     } catch (error: any) {
-        console.error("Error saving notification:", error);
+        console.error("API error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

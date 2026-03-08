@@ -82,10 +82,7 @@ Format as JSON with keys: "craft_story" (string), "short_description" (string)`;
         throw new Error("Failed to parse Claude output into JSON");
       }
     } catch (e: any) {
-      console.error("AWS error:", e);
-      if (e.name === 'AccessDeniedException') {
-        console.error("Check IAM permissions for the following actions: bedrock:InvokeModel");
-      }
+      console.error("API error:", e);
       // Fallback if JSON parsing fails or Bedrock fails
       parsedResponse = {
         craft_story: "This beautiful handmade piece was crafted with passion and attention to detail. Each item tells a unique story of traditional craftsmanship and artistic vision.",
@@ -118,10 +115,7 @@ Format as JSON with keys: "craft_story" (string), "short_description" (string)`;
     });
 
   } catch (error) {
-    console.error('Story capture error:', error);
-    return NextResponse.json(
-      { error: 'Failed to process story' },
-      { status: 500 }
-    );
+    console.error("API error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

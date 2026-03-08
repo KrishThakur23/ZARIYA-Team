@@ -41,9 +41,9 @@ export async function GET() {
         console.timeEnd("DynamoDB fetch");
         return NextResponse.json({ products: limitedProducts });
     } catch (error) {
-        console.error(error);
+        console.error("API error:", error);
         console.timeEnd("DynamoDB fetch");
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+        return NextResponse.json({ products: [] });
     }
 }
 
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ success: true, product: productData });
     } catch (error) {
-        console.error(error);
+        console.error("API error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

@@ -79,7 +79,7 @@ export async function GET() {
 
         return NextResponse.json(status, { status: hasError ? 500 : 200 });
     } catch (error) {
-        console.error("Health check error:", error);
+        console.error("API error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

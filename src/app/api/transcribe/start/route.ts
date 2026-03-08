@@ -60,10 +60,7 @@ export async function POST(req: Request) {
             status: response.TranscriptionJob?.TranscriptionJobStatus,
         });
     } catch (error: any) {
-        console.error("AWS error:", error);
-        if (error.name === 'AccessDeniedException') {
-            console.error("Check IAM permissions for the following actions: transcribe:StartTranscriptionJob");
-        }
+        console.error("API error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

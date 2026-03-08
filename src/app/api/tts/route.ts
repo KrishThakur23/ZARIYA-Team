@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
         throw new Error('No audio stream returned');
     } catch (error: any) {
-        console.error("TTS error:", error);
+        console.error("API error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

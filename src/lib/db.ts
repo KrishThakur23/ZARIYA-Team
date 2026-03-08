@@ -33,9 +33,13 @@ function getTableName(): string {
     return name;
 }
 
-const FAVORITES_TABLE = process.env.DDB_FAVORITES_TABLE || 'Favorites';
-const NOTIFICATIONS_TABLE = process.env.DDB_NOTIFICATIONS_TABLE || 'Notifications';
+function getFavoritesTableName(): string {
+    return process.env.DDB_FAVORITES_TABLE || 'Favorites';
+}
 
+function getNotificationsTableName(): string {
+    return process.env.DDB_NOTIFICATIONS_TABLE || 'Notifications';
+}
 // Define the product type here (mirroring frontend expectations)
 export interface Product {
     id: string; // Internal frontend ID
@@ -137,7 +141,7 @@ export interface Favorite {
 
 export async function saveFavorite(favorite: Favorite): Promise<void> {
     const command = new PutCommand({
-        TableName: FAVORITES_TABLE,
+        TableName: getFavoritesTableName(),
         Item: favorite,
     });
     try {
@@ -150,7 +154,7 @@ export async function saveFavorite(favorite: Favorite): Promise<void> {
 
 export async function removeFavorite(userId: string, productId: string): Promise<void> {
     const command = new DeleteCommand({
-        TableName: FAVORITES_TABLE,
+        TableName: getFavoritesTableName(),
         Key: { userId, productId },
     });
     try {
@@ -163,7 +167,7 @@ export async function removeFavorite(userId: string, productId: string): Promise
 
 export async function listUserFavorites(userId: string): Promise<Favorite[]> {
     const command = new QueryCommand({
-        TableName: FAVORITES_TABLE,
+        TableName: getFavoritesTableName(),
         KeyConditionExpression: "userId = :userId",
         ExpressionAttributeValues: {
             ":userId": userId,
@@ -190,7 +194,7 @@ export interface Notification {
 
 export async function saveNotification(notification: Notification): Promise<void> {
     const command = new PutCommand({
-        TableName: NOTIFICATIONS_TABLE,
+        TableName: getNotificationsTableName(),
         Item: notification,
     });
     try {
@@ -203,7 +207,7 @@ export async function saveNotification(notification: Notification): Promise<void
 
 export async function listUserNotifications(userId: string): Promise<Notification[]> {
     const command = new QueryCommand({
-        TableName: NOTIFICATIONS_TABLE,
+        TableName: getNotificationsTableName(),
         KeyConditionExpression: "userId = :userId",
         ExpressionAttributeValues: {
             ":userId": userId,

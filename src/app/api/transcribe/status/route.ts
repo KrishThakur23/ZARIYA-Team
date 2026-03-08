@@ -62,10 +62,7 @@ export async function GET(req: Request) {
             transcript: transcriptText,
         });
     } catch (error: any) {
-        console.error("AWS error:", error);
-        if (error.name === 'AccessDeniedException') {
-            console.error("Check IAM permissions for the following actions: transcribe:GetTranscriptionJob");
-        }
+        console.error("API error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

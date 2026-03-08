@@ -190,20 +190,7 @@ Strictly follow this schema:
 
         return NextResponse.json(data);
     } catch (error: any) {
-        console.error("[Autofill] Error:", error);
-
-        // safe fallback JSON per requirements
-        const fallbackData = {
-            title: "Handcrafted Indian Product",
-            description: "A beautiful handcrafted product with rich cultural heritage.",
-            category: "other",
-            tags: ["handcrafted", "artisan"],
-            suggested_price: 500,
-            estimated_dimensions: "10x10",
-            material_guess: "mixed",
-            confidence_score: 0.1
-        };
-
-        return NextResponse.json(fallbackData, { status: 200 }); // requirement: return safe fallback JSON instead of 500
+        console.error("API error:", error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

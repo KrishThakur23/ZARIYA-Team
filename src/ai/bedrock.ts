@@ -1,24 +1,31 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 
-const region = process.env.REGION;
-const accessKeyId = process.env.ACCESS_KEY_ID;
-const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+let _client: BedrockRuntimeClient | null = null;
 
-if (!accessKeyId || !secretAccessKey || !region) {
-    throw new Error("AWS environment variables not configured properly.");
+function getBedrockClient(): BedrockRuntimeClient {
+    if (!_client) {
+        const region = process.env.REGION;
+        const accessKeyId = process.env.ACCESS_KEY_ID;
+        const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+
+        if (!accessKeyId || !secretAccessKey || !region) {
+            throw new Error("AWS environment variables not configured properly.");
+        }
+
+        if (region !== 'us-east-1') {
+            throw new Error("Bedrock Claude 3 Haiku requires AWS_REGION to be us-east-1");
+        }
+
+        _client = new BedrockRuntimeClient({
+            region,
+            credentials: {
+                accessKeyId,
+                secretAccessKey,
+            },
+        });
+    }
+    return _client;
 }
-
-if (region !== 'us-east-1') {
-    throw new Error("Bedrock Claude 3 Haiku requires AWS_REGION to be us-east-1");
-}
-
-const client = new BedrockRuntimeClient({
-    region,
-    credentials: {
-        accessKeyId,
-        secretAccessKey,
-    },
-});
 
 export interface GenerateProductDetailsInput {
     title: string;
@@ -70,7 +77,7 @@ Story: ${input.story || 'None provided'}
 
     try {
         console.log("Calling AWS service: Bedrock");
-        const response = await client.send(command);
+        const response = await getBedrockClient().send(command);
         console.log("AWS call success");
         const resultString = new TextDecoder().decode(response.body);
         const resultObj = JSON.parse(resultString);
