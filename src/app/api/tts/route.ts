@@ -42,18 +42,14 @@ export async function POST(req: NextRequest) {
         const response = await getPollyClient().send(command);
 
         if (response.AudioStream) {
-            // Return the raw audio buffer directly to be read via response.blob() on the client
-            const webStream = response.AudioStream.transformToWebStream();
-            return new NextResponse(webStream, {
-                headers: {
-                    'Content-Type': 'audio/mpeg',
-                },
-            });
+            const byteArray = await response.AudioStream.transformToByteArray();
+            const base64 = Buffer.from(byteArray).toString('base64');
+            return NextResponse.json({ audio: `data:audio/mpeg;base64,${base64}` });
         }
 
         throw new Error('No audio stream returned');
     } catch (error: any) {
         console.error("API error:", error);
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+        return NextResponse.json({ audio: null });
     }
 }

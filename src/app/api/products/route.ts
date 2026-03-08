@@ -16,7 +16,7 @@ export async function GET() {
         if (cachedProducts && Date.now() - lastFetch < 10000) {
             console.log("Returning cached products");
             console.timeEnd("DynamoDB fetch");
-            return NextResponse.json({ products: cachedProducts });
+            return NextResponse.json(cachedProducts);
         }
 
         const products = await listProducts();
@@ -39,11 +39,11 @@ export async function GET() {
         lastFetch = Date.now();
 
         console.timeEnd("DynamoDB fetch");
-        return NextResponse.json({ products: limitedProducts });
+        return NextResponse.json(limitedProducts);
     } catch (error) {
         console.error("API error:", error);
         console.timeEnd("DynamoDB fetch");
-        return NextResponse.json({ products: [] });
+        return NextResponse.json([]);
     }
 }
 
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
         await saveProduct(productData);
 
-        return NextResponse.json({ success: true, product: productData });
+        return NextResponse.json(productData);
     } catch (error) {
         console.error("API error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });

@@ -56,7 +56,8 @@ export default function ArtisanProfilePage() {
         const productsRes = await fetch(`/api/products?artisanId=${params.id}`);
         if (productsRes.ok) {
           const productsData = await productsRes.json();
-          const filteredProducts = (productsData.products || [])
+          const remoteProducts = Array.isArray(productsData) ? productsData : productsData.products || [];
+          const filteredProducts = remoteProducts
             .filter((p: any) => p.status === 'published' && (p.originalImage || p.image))
             .map((p: any) => ({
               id: p.id,

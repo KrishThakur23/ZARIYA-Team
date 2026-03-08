@@ -38,8 +38,8 @@ export default function Discover({ onProductClick }: DiscoverProps) {
         const res = await fetch('/api/products');
         if (res.ok) {
           const data = await res.json();
-          const remoteProducts = data.products || [];
-          
+          const remoteProducts = Array.isArray(data) ? data : data.products || [];
+
           // Transform to match SwipeDeck format
           const transformedProducts = remoteProducts
             .filter((p: any) => p.status === 'published' && p.originalImage)

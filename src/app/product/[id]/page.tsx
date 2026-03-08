@@ -20,7 +20,7 @@ export default function ProductPage() {
                     const res = await fetch('/api/products');
                     if (res.ok) {
                         const data = await res.json();
-                        const remoteProducts = data.products || [];
+                        const remoteProducts = Array.isArray(data) ? data : data.products || [];
                         const foundRemote = remoteProducts.find((p: any) => p.id === params.id || p.productId === params.id);
 
                         if (foundRemote) {

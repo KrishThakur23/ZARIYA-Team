@@ -61,6 +61,9 @@ export async function POST(req: Request) {
         });
     } catch (error: any) {
         console.error("API error:", error);
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+        return NextResponse.json({
+            jobName: `fallback-job-${Date.now()}`,
+            status: 'FAILED',
+        });
     }
 }

@@ -63,7 +63,7 @@ const HomeFeed = React.memo(function HomeFeed({ onProductClick, onArtisanClick, 
         const res = await fetch('/api/products');
         if (res.ok) {
           const data = await res.json();
-          const remoteProducts = data.products || [];
+          const remoteProducts = Array.isArray(data) ? data : data.products || [];
 
           if (remoteProducts.length > 0) {
             // Filter strictly for published products with valid image URLs
