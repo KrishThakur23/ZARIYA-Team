@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
         };
 
         const command = new InvokeModelCommand({
-            modelId: 'us.amazon.nova-lite-v1:0',
+            modelId: 'us.amazon.nova-lite-v2:0',
             contentType: 'application/json',
             accept: 'application/json',
             body: JSON.stringify(payload),

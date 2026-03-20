@@ -131,7 +131,7 @@ Strictly follow this schema:
 `;
 
         const command = new ConverseCommand({
-            modelId: 'us.amazon.nova-pro-v1:0',
+            modelId: 'us.amazon.nova-pro-v2:0',
             inferenceConfig: {
                 maxTokens: 1000
             },
